@@ -1,33 +1,35 @@
 # ER Triage System
 
-מערכת תומכת החלטה לניהול ותעדוף תור מטופלים בחדר מיון.
+A decision-support system for managing and prioritizing patients in a hospital emergency room.
 
-## הצעת הפרויקט
+## Project Proposal
 
-המערכת מיועדת לסייע לצוות חדר המיון לנהל את תור המטופלים לפי רמת הדחיפות שלהם ולפי זמן ההגעה. מטופל חדש נקלט במערכת יחד עם נתונים ראשוניים על מצבו, מקבל רמת דחיפות בין 1 ל-5, ומשובץ בתור בהתאם לעדיפות שנקבעה לו.
+The system is designed to help emergency room staff manage the patient queue according to urgency level and arrival time. A new patient is registered in the system together with initial information about their condition, receives an urgency level from 1 to 5, and is placed in the queue according to the assigned priority.
 
-מטרת המערכת היא לתת קדימות למקרים דחופים, לצמצם זמני המתנה במקרים בעלי עדיפות גבוהה ולספק לצוות תמונת מצב מסודרת של המטופלים הממתינים. המערכת מיועדת לשמש ככלי תומך החלטה ולא כתחליף להחלטה רפואית של הצוות.
+The purpose of the system is to give priority to urgent cases, reduce waiting times for high-priority patients, and provide the medical staff with a clear overview of the patients currently waiting.
 
-### משתמשי המערכת
+The system is intended to serve as a decision-support tool and not as a replacement for professional medical decisions made by the medical staff.
 
-- אחות מיון
-- רופא/ה
-- מנהל/ת המיון
+### Main Users
 
-### ישויות מרכזיות
+- Triage Nurse
+- Doctor
+- Emergency Department Manager
 
-- `Patient` – מטופל
-- `TriageAssessment` – הערכת מיון
-- `EmergencyQueue` – תור המיון
-- `MedicalStaff` – איש צוות רפואי
+### Main Entities
 
-### תרחישי שימוש מרכזיים
+- `Patient` – Patient
+- `TriageAssessment` – Triage assessment
+- `EmergencyQueue` – Emergency room queue
+- `MedicalStaff` – Medical staff member
 
-1. קליטת מטופל חדש, קביעת רמת הדחיפות שלו והכנסתו למיקום המתאים בתור.
-2. בחירת המטופל הבא לטיפול בהתאם לרמת הדחיפות ולסדר ההגעה.
+### Main Use Cases
 
-### הרחבה עתידית
+1. Registering a new patient, determining their urgency level, and placing them in the appropriate position in the queue.
+2. Selecting the next patient for treatment according to urgency level and arrival time.
 
-בהמשך הפרויקט מתוכנן לשלב מודל AI מקומי באמצעות Ollama עם `gemma4:12b`, שיסייע בהמלצה על רמת הדחיפות בהתאם לנתוני המטופל.
+### Future Extension
 
-האפיון המלא של הצעת הפרויקט נמצא בקובץ `PROJECT_PROPOSAL.md`.
+In a future stage, a local AI model will be integrated using Ollama with `gemma4:12b`. The model will receive relevant patient information and assist in recommending an appropriate urgency level.
+
+The full English project proposal is available in `PROJECT_PROPOSAL_EN.md`.
