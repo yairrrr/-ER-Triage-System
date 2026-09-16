@@ -1,4 +1,32 @@
 from abc import ABC, abstractmethod
+class TriageAssessment:
+    def __init__(self,chief_complaint,pain_level,urgency_level):
+        self.chief_complaint = chief_complaint
+        self.pain_level = pain_level
+        self.urgency_level = urgency_level
+
+    @property
+    def pain_level(self):
+        return self._pain_level
+
+    @pain_level.setter
+    def pain_level(self, pain_level):
+        if 0 <= pain_level <= 10:
+            self._pain_level = pain_level
+        else:
+            raise ValueError("Pain level must be between 0 and 10")
+
+    @property
+    def urgency_level(self):
+        return self._urgency_level
+
+    @urgency_level.setter
+    def urgency_level(self, urgency_level):
+        if 1 <= urgency_level <= 5:
+            self._urgency_level = urgency_level
+        else:
+            raise ValueError("Urgency level must be between 1 and 5")
+
 class Patient:
     def __init__(self,patient_id , name , age , arrival_time , assessment=None , status = "waiting"):
         self.name = name
@@ -38,35 +66,12 @@ class Patient:
         arrival_time = data_dict["arrival_time"]
         assessment = data_dict.get("assessment", None)
         status = data_dict.get("status", "waiting")
+        if assessment is not None:
+            chief_complaint = data_dict["assessment"]["chief_complaint"]
+            pain_level = data_dict["assessment"]["pain_level"]
+            urgency_level = data_dict["assessment"]["urgency_level"]
+            return cls(patient_id , name , age , arrival_time , TriageAssessment(chief_complaint,pain_level,urgency_level) , status )
         return cls(patient_id,name,age,arrival_time,assessment,status)
-
-class TriageAssessment:
-    def __init__(self,chief_complaint,pain_level,urgency_level):
-        self.chief_complaint = chief_complaint
-        self.pain_level = pain_level
-        self.urgency_level = urgency_level
-
-    @property
-    def pain_level(self):
-        return self._pain_level
-
-    @pain_level.setter
-    def pain_level(self, pain_level):
-        if 0 <= pain_level <= 10:
-            self._pain_level = pain_level
-        else:
-            raise ValueError("Pain level must be between 0 and 10")
-
-    @property
-    def urgency_level(self):
-        return self._urgency_level
-
-    @urgency_level.setter
-    def urgency_level(self, urgency_level):
-        if 1 <= urgency_level <= 5:
-            self._urgency_level = urgency_level
-        else:
-            raise ValueError("Urgency level must be between 1 and 5")
 
 
 class MedicalStaff(ABC):

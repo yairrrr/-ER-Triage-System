@@ -1,0 +1,15 @@
+{"patient_id":"P001","name":"Daniel Cohen","age":67,"arrival_time":"2026-09-16T18:00:00","status":"waiting","assessment":{"chief_complaint":"Chest pain","pain_level":9,"urgency_level":1}}
+{"patient_id":"P002","name":"Maya Levi","age":34,"arrival_time":"2026-09-16T18:05:00","status":"waiting","assessment":{"chief_complaint":"Severe abdominal pain","pain_level":8,"urgency_level":2}}
+{"patient_id":"P003","name":"Noam Bar","age":21,"arrival_time":"2026-09-16T18:08:00","status":"waiting","assessment":{"chief_complaint":"Minor ankle injury","pain_level":4,"urgency_level":4}}
+{"patient_id":"P004","name":"Sarah Green","age":78,"arrival_time":"2026-09-16T18:12:00","status":"waiting","assessment":{"chief_complaint":"Difficulty breathing","pain_level":6,"urgency_level":1}}
+{"patient_id":"P005","name":"David Miller","age":52,"arrival_time":"2026-09-16T18:15:00","status":"waiting","assessment":{"chief_complaint":"High fever","pain_level":5,"urgency_level":3}}
+{"patient_id":"P006","name":"Emma Brown","age":29,"arrival_time":"2026-09-16T18:18:00","status":"waiting","assessment":{"chief_complaint":"Headache","pain_level":5,"urgency_level":4}}
+{"patient_id":"P007","name":"Adam Wilson","age":41,"arrival_time":"2026-09-16T18:21:00","status":"waiting","assessment":{"chief_complaint":"Deep cut on hand","pain_level":7,"urgency_level":3}}
+{"patient_id":"P008","name":"Olivia Davis","age":63,"arrival_time":"2026-09-16T18:25:00","status":"waiting","assessment":{"chief_complaint":"Sudden weakness and confusion","pain_level":2,"urgency_level":1}}
+{"patient_id":"P009","name":"Liam Taylor","age":18,"arrival_time":"2026-09-16T18:30:00","status":"waiting","assessment":{"chief_complaint":"Sore throat","pain_level":3,"urgency_level":5}}
+{"patient_id":"P010","name":"Sophia Martin","age":46,"arrival_time":"2026-09-16T18:34:00","status":"waiting","assessment":{"chief_complaint":"Persistent vomiting","pain_level":6,"urgency_level":3}}
+{"patient_id":"P011","name":"Ethan Clark","age":72,"arrival_time":"2026-09-16T18:39:00","status":"waiting","assessment":{"chief_complaint":"Dizziness","pain_level":3,"urgency_level":3}}
+{"patient_id":"P012","name":"Ava White","age":25,"arrival_time":"2026-09-16T18:43:00","status":"waiting","assessment":{"chief_complaint":"Minor burn on arm","pain_level":5,"urgency_level":4}}
+{"patient_id":"P013","name":"James Hall","age":58,"arrival_time":"2026-09-16T18:47:00","status":"waiting","assessment":{"chief_complaint":"Severe chest pressure","pain_level":9,"urgency_level":1}}
+{"patient_id":"P014","name":"Emily Young","age":37,"arrival_time":"2026-09-16T18:52:00","status":"waiting","assessment":{"chief_complaint":"Back pain","pain_level":6,"urgency_level":4}}
+{"patient_id":"P015","name":"Lucas King","age":31,"arrival_time":"2026-09-16T18:57:00","status":"waiting","assessment":{"chief_complaint":"Broken wrist after fall","pain_level":8,"urgency_level":2}}
