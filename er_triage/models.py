@@ -37,6 +37,15 @@ class Patient:
         self.assessment = assessment
 
     @property
+    def status(self):
+        return self._status
+    @status.setter
+    def status(self, status):
+        if status not in ("waiting", "in_treatment", "completed"):
+            raise ValueError("Invalid patient status")
+        self._status = status
+
+    @property
     def age(self):
         return self._age
     @age.setter
@@ -73,6 +82,12 @@ class Patient:
             return cls(patient_id , name , age , arrival_time , TriageAssessment(chief_complaint,pain_level,urgency_level) , status )
         return cls(patient_id,name,age,arrival_time,assessment,status)
 
+    def start_treatment(self):
+        self.status = "in_treatment"
+
+    def complete_treatment(self):
+        self.status = "completed"
+
 
 class MedicalStaff(ABC):
     def __init__(self,staff_id,name,department="ER"):
@@ -96,10 +111,30 @@ class EmergencyQueue:
         self.patients = []
 
     def add_patient(self,patient):
+        if patient.assessment is None:
+            raise ValueError("Patient must have assessment")
         self.patients.append(patient)
+        self.sort_queue()
 
     def remove_patient(self,patient):
         self.patients.remove(patient)
 
     def __len__(self):
         return len(self.patients)
+
+    def update_patient_urgency(self,patient,new_urgency_level):
+        if patient.assessment is None:
+            raise ValueError("Patient must have assessment")
+        patient.assessment.urgency_level = new_urgency_level
+        self.sort_queue()
+
+    def sort_queue(self):
+        self.patients.sort(key=lambda patient: (patient.assessment.urgency_level,patient.arrival_time))
+
+    def get_next_patient(self):
+        if len(self.patients) == 0:
+            return None
+        next_patient = self.patients.pop(0)
+        next_patient.start_treatment()
+        return next_patient
+
