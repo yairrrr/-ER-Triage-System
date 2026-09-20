@@ -1,14 +1,26 @@
 # ER Triage System
 
-A decision-support system for managing and prioritizing patients in a hospital emergency room.
+A system for managing and prioritizing patients in a hospital emergency room.
 
 ## Project Proposal
 
-The system is designed to help emergency room staff manage the patient queue according to urgency level and arrival time. A new patient is registered in the system together with initial information about their condition, receives an urgency level from 1 to 5, and is placed in the queue according to the assigned priority.
+The system is designed to help emergency room staff manage the patient queue according to urgency level and arrival time.
 
-The purpose of the system is to give priority to urgent cases, reduce waiting times for high-priority patients, and provide the medical staff with a clear overview of the patients currently waiting.
+A new patient is registered in the system together with initial information about their condition. The triage nurse assigns an urgency level from 1 to 5, and the system places the patient in the appropriate position in the queue.
 
-The system is intended to serve as a decision-support tool and not as a replacement for professional medical decisions made by the medical staff.
+If the patient's condition changes while waiting, the triage nurse can update the urgency level and the system updates the patient's position in the queue accordingly.
+
+The system also manages the patient's status throughout the process:
+
+- `waiting`
+- `in_treatment`
+- `completed`
+
+An on-demand function will provide a basic report about waiting patients and their waiting times.
+
+The purpose of the system is to give priority to urgent cases, improve queue management, and provide the medical staff with a clear overview of the patients currently waiting.
+
+The system supports the decisions made by the medical staff and does not determine medical urgency independently.
 
 ### Main Users
 
@@ -19,17 +31,22 @@ The system is intended to serve as a decision-support tool and not as a replacem
 ### Main Entities
 
 - `Patient` – Patient
-- `TriageAssessment` – Triage assessment
-- `EmergencyQueue` – Emergency room queue
+- `TriageAssessment` – Triage assessment and assigned urgency level
+- `EmergencyQueue` – Emergency room priority queue
 - `MedicalStaff` – Medical staff member
 
 ### Main Use Cases
 
-1. Registering a new patient, determining their urgency level, and placing them in the appropriate position in the queue.
+1. Registering a new patient, assigning an urgency level, and placing the patient in the appropriate position in the queue.
 2. Selecting the next patient for treatment according to urgency level and arrival time.
+3. Updating the urgency level of a waiting patient and repositioning the patient in the queue.
+4. Updating patient status from waiting to treatment and then to completed.
+5. Generating an on-demand basic report about waiting patients and waiting times.
 
 ### Future Extension
 
-In a future stage, a local AI model will be integrated using Ollama with `gemma4:12b`. The model will receive relevant patient information and assist in recommending an appropriate urgency level.
+Additional capabilities may be integrated in future stages according to the requirements of the project.
+
+At the current stage, urgency levels are determined by the triage staff without AI-based decision making.
 
 The full English project proposal is available in `PROJECT_PROPOSAL_EN.md`.

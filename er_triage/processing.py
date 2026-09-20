@@ -37,8 +37,12 @@ def create_priority_queue(patients):
     return priority_queue
 
 def pop_next_patient(priority_queue):
+    if len(priority_queue) == 0:
+        return None
     patient_tuple = heapq.heappop(priority_queue)
-    return patient_tuple[3]
+    patient = patient_tuple[3]
+    patient.start_treatment()
+    return patient
 
 def get_urgency_level(patient):
     return patient.assessment.urgency_level
