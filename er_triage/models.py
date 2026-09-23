@@ -5,6 +5,20 @@ class TriageAssessment:
         self.pain_level = pain_level
         self.urgency_level = urgency_level
 
+    def __str__(self):
+        return (
+            f"Urgency {self.urgency_level} - "
+            f"{self.chief_complaint}"
+        )
+
+    def __repr__(self):
+        return (
+            f"TriageAssessment("
+            f"chief_complaint={self.chief_complaint!r}, "
+            f"pain_level={self.pain_level!r}, "
+            f"urgency_level={self.urgency_level!r})"
+        )
+
     @property
     def pain_level(self):
         return self._pain_level
@@ -22,10 +36,18 @@ class TriageAssessment:
 
     @urgency_level.setter
     def urgency_level(self, urgency_level):
-        if 1 <= urgency_level <= 5:
+        if self.is_valid_urgency(urgency_level):
             self._urgency_level = urgency_level
         else:
             raise ValueError("Urgency level must be between 1 and 5")
+
+    @staticmethod
+    def is_valid_urgency(urgency_level):
+        return 1 <= urgency_level <= 5
+
+    @classmethod
+    def from_dict(cls, data_dict):
+        return cls(data_dict["chief_complaint"],data_dict["pain_level"],data_dict["urgency_level"])
 
 class Patient:
     def __init__(self,patient_id , name , age , arrival_time , assessment=None , status = "waiting"):
@@ -35,6 +57,17 @@ class Patient:
         self.arrival_time = arrival_time
         self.status = status
         self.assessment = assessment
+
+    def __str__(self):
+        return f"{self.name} ({self.patient_id})"
+
+    def __repr__(self):
+        return (
+            f"Patient(patient_id={self.patient_id!r}, "
+            f"name={self.name!r}, "
+            f"age={self.age!r}, "
+            f"status={self.status!r})"
+        )
 
     @property
     def status(self):
@@ -67,6 +100,11 @@ class Patient:
             return self.patient_id == other.patient_id
         return False
 
+    def __lt__(self, other):
+        if not isinstance(other, Patient):
+            return NotImplemented
+        return (self.assessment.urgency_level,self.arrival_time) < (other.assessment.urgency_level,other.arrival_time)
+
     @classmethod
     def patient_from_dict(cls,data_dict):
         patient_id = data_dict["patient_id"]
@@ -76,10 +114,7 @@ class Patient:
         assessment = data_dict.get("assessment", None)
         status = data_dict.get("status", "waiting")
         if assessment is not None:
-            chief_complaint = data_dict["assessment"]["chief_complaint"]
-            pain_level = data_dict["assessment"]["pain_level"]
-            urgency_level = data_dict["assessment"]["urgency_level"]
-            return cls(patient_id , name , age , arrival_time , TriageAssessment(chief_complaint,pain_level,urgency_level) , status )
+            assessment = TriageAssessment.from_dict(assessment)
         return cls(patient_id,name,age,arrival_time,assessment,status)
 
     def start_treatment(self):
@@ -97,6 +132,17 @@ class MedicalStaff(ABC):
     @abstractmethod
     def get_role(self):
         pass
+
+    def __str__(self):
+        return f"{self.name} - {self.get_role()}"
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}("
+            f"staff_id={self.staff_id!r}, "
+            f"name={self.name!r}, "
+            f"department={self.department!r})"
+        )
 
 class Nurse(MedicalStaff):
     def get_role(self):
@@ -138,3 +184,16 @@ class EmergencyQueue:
         next_patient.start_treatment()
         return next_patient
 
+    def print_queue(self):
+        for patient in self.patients:
+            print(
+                patient.name,
+                patient.assessment.urgency_level,
+                patient.arrival_time
+            )
+
+    def __str__(self):
+        return f"Emergency Queue ({len(self.patients)} patients)"
+
+    def __repr__(self):
+        return f"EmergencyQueue(patients={self.patients!r})"
