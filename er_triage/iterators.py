@@ -1,3 +1,9 @@
+class WaitingPatients:
+    def __init__(self, patients):
+        self.patients = patients
+
+    def __iter__(self):
+        return WaitingPatientIterator(self.patients)
 
 
 class WaitingPatientIterator:
@@ -15,4 +21,5 @@ class WaitingPatientIterator:
 
             if patient.is_waiting:
                 return patient
+
         raise StopIteration

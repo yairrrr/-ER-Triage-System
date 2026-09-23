@@ -12,4 +12,10 @@ def urgency_filter_generator(patients, urgency_level):
 
 def urgent_waiting_pipeline(patients, urgency_level):
     waiting = waiting_patients_generator(patients)
-    return urgency_filter_generator(waiting, urgency_level)
+    urgent = urgency_filter_generator(waiting, urgency_level)
+    return patient_id_generator(urgent)
+
+def patient_id_generator(patients):
+    for patient in patients:
+        yield patient.patient_id
+
