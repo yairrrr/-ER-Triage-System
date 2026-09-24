@@ -3,7 +3,10 @@ import heapq
 
 def build_patient_lookup(patients):
     patient_lookup = {}
+
     for patient in patients:
+        if patient.patient_id in patient_lookup:
+            raise ValueError(f"Duplicate patient ID: {patient.patient_id}")
         patient_lookup[patient.patient_id] = patient
     return patient_lookup
 
