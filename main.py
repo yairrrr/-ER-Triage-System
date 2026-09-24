@@ -1,7 +1,5 @@
 from er_triage.repository import load_patients
-from er_triage.models import EmergencyQueue
 from er_triage.iterators import WaitingPatients
-from er_triage.generators import urgent_waiting_pipeline
 from er_triage.reporting import generate_waiting_report
 from er_triage.context_managers import TriageSession
 from er_triage.processing import create_arrival_queue, pop_next_arrival
