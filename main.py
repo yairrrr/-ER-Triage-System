@@ -9,7 +9,7 @@ from er_triage.processing import get_unique_urgency_levels
 from er_triage.processing import group_patients_by_urgency
 from er_triage.processing import sort_patients_by_urgency, sort_patients_by_priority
 from er_triage.generators import waiting_patients_generator, urgent_waiting_pipeline
-from er_triage.models import EmergencyQueue, Nurse, Doctor
+from er_triage.models import EmergencyQueue, Nurse, Doctor, Patient, TriageAssessment
 
 def main():
     patients = load_patients("data/sample_data.jsonl")
@@ -160,6 +160,26 @@ def main():
         "Patient equality:",
         patients[0] == patients[0]
     )
+
+    print("\n=== Validation ===")
+
+    try:
+        Patient("P100", "Test Patient", 30, "not-a-date", TriageAssessment("Headache", 3, 4))
+    except ValueError as error:
+        print("Arrival time check:", error)
+
+    try:
+        TriageAssessment("Headache", 3, 2.5)
+    except ValueError as error:
+        print("Urgency level check:", error)
+
+    validation_queue = EmergencyQueue()
+    validation_queue.add_patient(patients[1])
+
+    try:
+        validation_queue.add_patient(patients[1])
+    except ValueError as error:
+        print("Duplicate patient check:", error)
 
     print("\n=== Polymorphism ===")
 

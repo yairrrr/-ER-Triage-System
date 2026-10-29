@@ -55,3 +55,101 @@ Each generated patient record follows this general structure:
     "urgency_level": 1
   }
 }
+```
+
+### Field Rules
+
+The records must satisfy the validation rules of the business classes in `er_triage/models.py`:
+
+| Field | Rule |
+|---|---|
+| `patient_id` | Unique across the file |
+| `age` | Whole number between 0 and 120 |
+| `arrival_time` | Valid ISO date-time string, for example `2026-09-16T18:00:00` |
+| `status` | One of `waiting`, `in_treatment`, `completed` |
+| `assessment.pain_level` | Whole number between 0 and 10 |
+| `assessment.urgency_level` | Whole number between 1 and 5 (1 = highest priority) |
+
+---
+
+## Data Checks Performed
+
+The generated file was checked in two ways.
+
+### 1. Direct Inspection of the Records
+
+A short Python check read `data/sample_data.jsonl` line by line and verified the records against the rules above. Results:
+
+| Check | Result |
+|---|---|
+| Every line is valid JSON | 15 of 15 lines parsed |
+| Number of records | 15 (the minimum required) |
+| Duplicate `patient_id` values | None (`P001`–`P015`) |
+| Missing top-level fields | None |
+| Missing assessment fields | None |
+| `status` values | All 15 records are `waiting` |
+| `age` | Whole numbers, range 18–78 |
+| `arrival_time` | All valid ISO date-times in one format, range 18:00–18:57 on 2026-09-16 |
+| `urgency_level` | Whole numbers only: 1 (×4), 2 (×2), 3 (×4), 4 (×4), 5 (×1) |
+| `pain_level` | Whole numbers only, range 2–9 |
+| Real personal information | None, all names and complaints are fictional |
+
+The urgency levels were also read against the chief complaints to make sure the data is reasonable for the scenario. For example, chest pain and difficulty breathing are urgency 1, while a sore throat is urgency 5.
+
+### 2. Loading Through the Project Code
+
+The file was loaded with `load_patients()` from `er_triage/repository.py`, which converts every line into `Patient` and `TriageAssessment` objects and runs all model validation. All 15 records were loaded successfully.
+
+To confirm that the loader really rejects bad data, and does not only accept good data, test copies of the file were created outside the repository, each with one deliberate error:
+
+| Deliberate error | Result |
+|---|---|
+| Truncated JSON line | Rejected: `Invalid JSON on line 3` |
+| Record without `age` | Rejected: `Missing fields on line 3: {'age'}` |
+| Repeated `P001` record | Rejected: `Duplicate patient ID: P001` |
+| `arrival_time` = `"16/09/2026 18:00"` | Rejected: `Invalid arrival time` |
+| `urgency_level` = `2.5` | Rejected: `Urgency level must be a whole number between 1 and 5` |
+| `urgency_level` = `7` | Rejected: `Urgency level must be a whole number between 1 and 5` |
+| `status` = `"discharged"` | Rejected: `Invalid patient status` |
+| `age` = `-4` | Rejected: `Age must be a whole number between 0 and 120` |
+
+---
+
+## Problems Found and Fixes
+
+The check with deliberately invalid data showed that some invalid values were accepted by the model before the fix:
+
+| Problem | Before the fix | Fix in `er_triage/models.py` |
+|---|---|---|
+| Invalid arrival time | `Patient` accepted any value, for example `"16/09/2026 18:00"` or `"yesterday"`. The error appeared only later, when the report tried to compute waiting time. | `arrival_time` is now a property. The setter accepts only a string that `datetime.fromisoformat()` can parse and raises `ValueError` otherwise. The value is stored in one normalized ISO format so sorting by arrival time stays chronological. |
+| Non-integer urgency level | `TriageAssessment` accepted `2.5` because only the range 1–5 was checked. | `is_valid_urgency()` now also requires a whole number. `bool`, `float` and `str` are rejected. |
+| Same patient added twice to the queue | `EmergencyQueue.add_patient()` added the same patient twice, so the queue length grew to 2 for one patient. | `add_patient()` raises `ValueError` when a patient with the same `patient_id` is already in the queue. The check uses `Patient.__eq__`, which compares `patient_id`. |
+| Same gap in other numeric fields | `pain_level` accepted `7.5` and `age` raised `TypeError` instead of `ValueError` for text. | `pain_level` and `age` now also require whole numbers and raise `ValueError` with a clear message. |
+
+Each problem was reproduced with the code before the fix, and then checked again after the fix:
+
+- `Patient(..., arrival_time="not-a-date")` raises `ValueError`.
+- `TriageAssessment("Headache", 3, 2.5)` raises `ValueError`.
+- Calling `add_patient()` twice with the same patient raises `ValueError` and the queue length stays 1.
+- Valid values (urgency 1–5, ISO arrival times, a new patient) are still accepted.
+- Updating the urgency of an existing assessment to `2.5` raises `ValueError` and keeps the previous value.
+
+`main.py` contains a `Validation` section that demonstrates these three cases. Running `python3 main.py` completes successfully, and apart from this new section the output is the same as before the fix.
+
+---
+
+## Additional AI Usage
+
+### ChatGPT
+
+ChatGPT was used during development for explanations, code review, debugging, and checking the implementation against the assignment requirements.
+
+### Claude Code
+
+Claude Code (Anthropic) was used after the lecturer's feedback on Stage 1. It was used to:
+
+- Reproduce the validation gaps listed in the feedback with small Python checks.
+- Suggest the validation changes in `er_triage/models.py` and the `Validation` section in `main.py`.
+- Run the data checks and the deliberate-error checks described above.
+
+The suggested changes were reviewed, run and checked before they were committed. The responsibility for the code and the decisions remains with the student.

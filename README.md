@@ -161,6 +161,15 @@ Invalid values raise `ValueError` with an explanatory message.
 
 The project uses properties and validation for controlled access to business fields.
 
+The validated business rules are:
+
+- `Patient.age` must be a whole number between 0 and 120.
+- `Patient.arrival_time` must be a valid ISO date-time string, for example `2026-09-16T18:00:00`. It is stored in one normalized format so sorting by arrival time stays chronological.
+- `Patient.status` must be `waiting`, `in_treatment`, or `completed`.
+- `TriageAssessment.pain_level` must be a whole number between 0 and 10.
+- `TriageAssessment.urgency_level` must be a whole number between 1 and 5. Values such as `2.5` are rejected.
+- `EmergencyQueue.add_patient()` rejects a patient without an assessment and a patient whose `patient_id` is already in the queue.
+
 Additional OOP features used by the project include:
 
 - `@classmethod` for alternative construction from dictionaries.

@@ -1,4 +1,12 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
+
+
+def is_whole_number(value):
+    # bool is a subclass of int, so True/False must be rejected explicitly
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 class TriageAssessment:
     def __init__(self,chief_complaint,pain_level,urgency_level):
         self.chief_complaint = chief_complaint
@@ -25,10 +33,10 @@ class TriageAssessment:
 
     @pain_level.setter
     def pain_level(self, pain_level):
-        if 0 <= pain_level <= 10:
+        if is_whole_number(pain_level) and 0 <= pain_level <= 10:
             self._pain_level = pain_level
         else:
-            raise ValueError("Pain level must be between 0 and 10")
+            raise ValueError("Pain level must be a whole number between 0 and 10")
 
     @property
     def urgency_level(self):
@@ -39,11 +47,11 @@ class TriageAssessment:
         if self.is_valid_urgency(urgency_level):
             self._urgency_level = urgency_level
         else:
-            raise ValueError("Urgency level must be between 1 and 5")
+            raise ValueError("Urgency level must be a whole number between 1 and 5")
 
     @staticmethod
     def is_valid_urgency(urgency_level):
-        return 1 <= urgency_level <= 5
+        return is_whole_number(urgency_level) and 1 <= urgency_level <= 5
 
     @classmethod
     def from_dict(cls, data_dict):
@@ -83,10 +91,24 @@ class Patient:
         return self._age
     @age.setter
     def age(self, age):
-        if age < 0 or age > 120:
-            raise ValueError("Age must be between 0 and 120")
+        if not is_whole_number(age) or age < 0 or age > 120:
+            raise ValueError("Age must be a whole number between 0 and 120")
         else:
             self._age = age
+
+    @property
+    def arrival_time(self):
+        return self._arrival_time
+    @arrival_time.setter
+    def arrival_time(self, arrival_time):
+        if not isinstance(arrival_time, str):
+            raise ValueError("Arrival time must be an ISO date-time string")
+        try:
+            parsed_time = datetime.fromisoformat(arrival_time)
+        except ValueError:
+            raise ValueError(f"Invalid arrival time: {arrival_time!r}") from None
+        # Stored in one normalized format so string comparison keeps chronological order
+        self._arrival_time = parsed_time.isoformat()
 
     @property
     def is_waiting(self):
@@ -159,6 +181,8 @@ class EmergencyQueue:
     def add_patient(self,patient):
         if patient.assessment is None:
             raise ValueError("Patient must have assessment")
+        if patient in self.patients:
+            raise ValueError(f"Patient {patient.patient_id} is already in the queue")
         self.patients.append(patient)
         self.sort_queue()
 
