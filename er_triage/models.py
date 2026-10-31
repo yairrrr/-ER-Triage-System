@@ -65,6 +65,8 @@ class Patient:
         self.arrival_time = arrival_time
         self.status = status
         self.assessment = assessment
+        self.needs_reassessment = False
+        self.reassessment_reason = None
 
     def __str__(self):
         return f"{self.name} ({self.patient_id})"
@@ -141,8 +143,19 @@ class Patient:
             assessment = TriageAssessment.from_dict(assessment)
         return cls(patient_id,name,age,arrival_time,assessment,status)
 
+    def flag_for_reassessment(self, reason):
+        if not self.is_waiting:
+            raise ValueError(
+                f"Only a waiting patient can be flagged for reassessment, "
+                f"patient {self.patient_id} is {self.status}"
+            )
+        self.needs_reassessment = True
+        self.reassessment_reason = reason
+
     def start_treatment(self):
         self.status = "in_treatment"
+        self.needs_reassessment = False
+        self.reassessment_reason = None
 
     def complete_treatment(self):
         self.status = "completed"
