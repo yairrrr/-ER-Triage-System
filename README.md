@@ -164,7 +164,7 @@ The project uses properties and validation for controlled access to business fie
 The validated business rules are:
 
 - `Patient.age` must be a whole number between 0 and 120.
-- `Patient.arrival_time` must be a valid ISO date-time string, for example `2026-09-16T18:00:00`. It is stored in one normalized format so sorting by arrival time stays chronological.
+- `Patient.arrival_time` must be a valid ISO date-time string whose date is today, for example `2026-10-31T06:00:00` when the program runs on 31 October 2026. Dates before or after today are rejected. It is stored in one normalized format so sorting by arrival time stays chronological.
 - `Patient.status` must be `waiting`, `in_treatment`, or `completed`.
 - `TriageAssessment.pain_level` must be a whole number between 0 and 10.
 - `TriageAssessment.urgency_level` must be a whole number between 1 and 5. Values such as `2.5` are rejected.
@@ -322,7 +322,7 @@ Example:
   "patient_id": "P001",
   "name": "Daniel Cohen",
   "age": 35,
-  "arrival_time": "2026-09-16T18:00:00",
+  "arrival_time": "06:00:00",
   "status": "waiting",
   "assessment": {
     "chief_complaint": "Chest pain",
@@ -331,6 +331,8 @@ Example:
   }
 }
 ```
+
+In the data file `arrival_time` holds only the clock time (`HH:MM:SS`). When the file is loaded, `repository.py` combines it with today's date, so the demo data is valid on any day.
 
 ### Loading Process
 
@@ -347,6 +349,8 @@ json.loads()
    ↓
 dict
    ↓
+to_todays_arrival_time()  (adds today's date to the clock time)
+   ↓
 Patient.patient_from_dict()
    ↓
 Patient object
@@ -359,6 +363,7 @@ The repository checks for:
 - Invalid JSON.
 - Missing required fields.
 - Duplicate patient IDs.
+- An arrival time that is not a valid clock time, reported with the line number.
 - Invalid business values through model validation.
 
 The synthetic dataset was generated with AI assistance. The AI tool, generation prompt, record structure, validation process, corrections, and verification are documented in `AI_USAGE.md`.

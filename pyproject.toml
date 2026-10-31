@@ -4,8 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "er-triage-system"
-version = "0.1.0"
+version = "0.2.0"
 description = "Emergency room patient triage and priority queue management system"
 requires-python = ">=3.11"
+dependencies = ["requests>=2.31", "python-dotenv>=1.0"]
 
-dependencies = []
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+packages = ["er_triage"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
