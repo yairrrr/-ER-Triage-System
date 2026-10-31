@@ -194,3 +194,12 @@ The suggested changes were reviewed, run and checked before they were committed.
 - Expected results we defined ourselves, from the business rule: `31.9` is `normal`, exactly `32` is `caution`, `38.9` is `caution`, exactly `39` is `danger`.
 - What we verified: in the Red step the run showed `4 failed, 2 passed` with `AssertionError` (the missing behaviour, not an import error); after Green and after Refactor the full suite passed (30 tests). The test file was not changed after the Red commit.
 - What we checked and corrected: the thresholds come from the US National Weather Service heat index categories (90°F = 32.2°C, 103°F = 39.4°C). We rounded them to 32 and 39 and documented in the code that this is an approximation, because Open-Meteo's apparent temperature uses a different formula.
+### T11 – Asynchronous lab result collection
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the business scenario, the functions and the test cases, without changing code.
+- Expected results we defined ourselves:
+  - With delays of 0.15, 0.05 and 0.10 seconds, the concurrent version returns the results in the input order (`A001`, `A002`, `A003`), although `A002` finishes first.
+  - The sequential version takes at least the sum of the delays (about 0.30 s) and the concurrent version takes less than 0.25 s.
+- What we verified: ran `python -m pytest -v` (36 tests passed); ran both versions on `data/lab_results.json` and measured 0.303 s (sequential) against 0.152 s (concurrent) with identical results; checked that the async module uses only `asyncio.sleep` and no `time.sleep` or HTTP calls.
+- What we decided: the lab values in `data/lab_results.json` are fictional and are not based on medical reference ranges, so whether a result is critical is stored in the data (`is_critical`) and not calculated in the code. Handling a failure of a single task while collecting the others is optional in the assignment and was not implemented.

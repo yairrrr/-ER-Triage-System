@@ -1,0 +1,8 @@
+{
+  "P001": {"test_name": "Troponin", "value": 0.9, "is_critical": true},
+  "P002": {"test_name": "Lipase", "value": 45.0, "is_critical": false},
+  "P005": {"test_name": "White blood cell count", "value": 14.2, "is_critical": false},
+  "P010": {"test_name": "Potassium", "value": 2.6, "is_critical": true},
+  "P011": {"test_name": "Glucose", "value": 98.0, "is_critical": false},
+  "P013": {"test_name": "Troponin", "value": 1.4, "is_critical": true}
+}
