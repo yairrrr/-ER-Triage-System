@@ -47,7 +47,7 @@ Each generated patient record follows this general structure:
   "patient_id": "P001",
   "name": "Daniel Cohen",
   "age": 35,
-  "arrival_time": "2026-09-16T18:00:00",
+  "arrival_time": "06:00:00",
   "status": "waiting",
   "assessment": {
     "chief_complaint": "Chest pain",
@@ -65,7 +65,7 @@ The records must satisfy the validation rules of the business classes in `er_tri
 |---|---|
 | `patient_id` | Unique across the file |
 | `age` | Whole number between 0 and 120 |
-| `arrival_time` | Valid ISO date-time string, for example `2026-09-16T18:00:00` |
+| `arrival_time` | Clock time `HH:MM:SS`; the loader adds today's date, and the model accepts only today's date |
 | `status` | One of `waiting`, `in_treatment`, `completed` |
 | `assessment.pain_level` | Whole number between 0 and 10 |
 | `assessment.urgency_level` | Whole number between 1 and 5 (1 = highest priority) |
@@ -125,16 +125,18 @@ The check with deliberately invalid data showed that some invalid values were ac
 | Non-integer urgency level | `TriageAssessment` accepted `2.5` because only the range 1–5 was checked. | `is_valid_urgency()` now also requires a whole number. `bool`, `float` and `str` are rejected. |
 | Same patient added twice to the queue | `EmergencyQueue.add_patient()` added the same patient twice, so the queue length grew to 2 for one patient. | `add_patient()` raises `ValueError` when a patient with the same `patient_id` is already in the queue. The check uses `Patient.__eq__`, which compares `patient_id`. |
 | Same gap in other numeric fields | `pain_level` accepted `7.5` and `age` raised `TypeError` instead of `ValueError` for text. | `pain_level` and `age` now also require whole numbers and raise `ValueError` with a clear message. |
+| Arrival date not today | After the first fix any valid ISO date was accepted, for example `2035-01-01T10:00:00` or `2020-01-01T10:00:00`. | The `arrival_time` setter also requires the date to be today. The data file stores only the clock time, and `load_patients()` combines it with today's date, so the demo data stays valid on any day. The sample times were moved from 18:00–18:57 to 06:00–06:57 to avoid negative waiting times during the day. |
 
 Each problem was reproduced with the code before the fix, and then checked again after the fix:
 
 - `Patient(..., arrival_time="not-a-date")` raises `ValueError`.
+- `Patient(..., arrival_time="2020-01-01T10:00:00")` raises `ValueError` ("Arrival time must be today").
 - `TriageAssessment("Headache", 3, 2.5)` raises `ValueError`.
 - Calling `add_patient()` twice with the same patient raises `ValueError` and the queue length stays 1.
 - Valid values (urgency 1–5, ISO arrival times, a new patient) are still accepted.
 - Updating the urgency of an existing assessment to `2.5` raises `ValueError` and keeps the previous value.
 
-`main.py` contains a `Validation` section that demonstrates these three cases. Running `python3 main.py` completes successfully, and apart from this new section the output is the same as before the fix.
+`main.py` contains a `Validation` section that demonstrates the invalid arrival time, the arrival date that is not today, the non-integer urgency level and the duplicate patient. Running `python3 main.py` completes successfully, and apart from this new section the output is the same as before the fix.
 
 ---
 

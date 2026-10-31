@@ -169,6 +169,11 @@ def main():
         print("Arrival time check:", error)
 
     try:
+        Patient("P101", "Test Patient", 30, "2020-01-01T10:00:00", TriageAssessment("Headache", 3, 4))
+    except ValueError as error:
+        print("Arrival date check:", error)
+
+    try:
         TriageAssessment("Headache", 3, 2.5)
     except ValueError as error:
         print("Urgency level check:", error)

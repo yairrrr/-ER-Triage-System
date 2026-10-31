@@ -1,5 +1,15 @@
 import json
+from datetime import date, datetime, time
 from .models import Patient
+
+
+def to_todays_arrival_time(arrival_clock, line_number):
+    # The data file stores only the clock time; the arrival date is always today
+    try:
+        clock = time.fromisoformat(arrival_clock)
+    except (TypeError, ValueError):
+        raise ValueError(f"Invalid arrival time on line {line_number}: {arrival_clock!r}") from None
+    return datetime.combine(date.today(), clock).isoformat()
 
 
 def load_patients(file_path):
@@ -26,6 +36,8 @@ def load_patients(file_path):
 
             if patient_id in patient_ids:
                 raise ValueError(f"Duplicate patient ID: {patient_id}")
+
+            patient_dict["arrival_time"] = to_todays_arrival_time(patient_dict["arrival_time"], line_number)
 
             patient = Patient.patient_from_dict(patient_dict)
 

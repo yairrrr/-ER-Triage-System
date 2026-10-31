@@ -393,12 +393,20 @@ testpaths = ["tests"]
 
 ```python
 # tests/conftest.py
+from datetime import date, datetime, time
+
 import pytest
 from er_triage.models import Patient, TriageAssessment
 
 
+def today_at(hour, minute=0):
+    return datetime.combine(date.today(), time(hour, minute)).isoformat()
+
+
 def make_patient(patient_id, age, complaint, urgency, status="waiting",
-                 arrival_time="2026-09-16T18:00:00", pain=5):
+                 arrival_time=None, pain=5):
+    if arrival_time is None:
+        arrival_time = today_at(6)
     return Patient(patient_id, f"Test {patient_id}", age, arrival_time,
                    TriageAssessment(complaint, pain, urgency), status)
 
@@ -416,6 +424,8 @@ def heat_patients():
 ```
 
 מותר להוסיף fixtures לקובץ. לשנות קיים רק בתיאום בווטסאפ.
+
+חשוב לכל המשימות: זמן הגעה תקין הוא רק תאריך של היום (תיקון הערת המרצה, בוצע ב־T0). בבדיקות לא כותבים תאריך קבוע – משתמשים ב־`today_at(hour, minute)`. בקובץ JSONL של נתונים, `arrival_time` הוא שעה בלבד, למשל `"06:00:00"`, והטעינה מוסיפה את התאריך של היום.
 
 ---
 
@@ -704,12 +714,14 @@ def generate_heat_report(patients, result) -> dict:
 - [ ] `parametrize` על `pain_level` לא תקין: -1, 11, 2.5, True. כולם `ValueError`.
 - [ ] `parametrize` על `urgency_level` לא תקין: 0, 6, "1". כולם `ValueError`.
 - [ ] `arrival_time` לא תקין זורק `ValueError`.
+- [ ] `parametrize` על זמן הגעה שאינו היום: אתמול, מחר, `"2020-01-01T10:00:00"`. כולם `ValueError`; ו־`today_at(6)` מתקבל.
 - [ ] `EmergencyQueue`: מטופל כפול זורק `ValueError`; `get_next_patient` מחזיר את הדחוף ביותר ומשנה סטטוס; תור ריק מחזיר `None`.
 - [ ] עדכון דחיפות ממיין מחדש את התור.
 
 `tests/test_repository.py` עם `tmp_path`:
 
-- [ ] קובץ תקין עם שתי שורות מחזיר שני מטופלים.
+- [ ] קובץ תקין עם שתי שורות (שעה בלבד, למשל `"06:00:00"`) מחזיר שני מטופלים, ותאריך ההגעה שלהם הוא היום.
+- [ ] שעה לא תקינה בקובץ, למשל `"25:00:00"`, זורקת `ValueError` עם מספר השורה.
 - [ ] JSON פגום זורק `ValueError` עם מספר השורה.
 - [ ] שדה חסר זורק `ValueError`.
 - [ ] מזהה כפול זורק `ValueError`.

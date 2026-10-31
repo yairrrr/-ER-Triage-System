@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
-
+from datetime import date, datetime
 
 def is_whole_number(value):
     # bool is a subclass of int, so True/False must be rejected explicitly
@@ -107,6 +106,8 @@ class Patient:
             parsed_time = datetime.fromisoformat(arrival_time)
         except ValueError:
             raise ValueError(f"Invalid arrival time: {arrival_time!r}") from None
+        if parsed_time.date() != date.today():
+            raise ValueError(f"Arrival time must be today: {arrival_time!r}")
         # Stored in one normalized format so string comparison keeps chronological order
         self._arrival_time = parsed_time.isoformat()
 
