@@ -1,0 +1,19 @@
+{
+  "latitude": 32.09859,
+  "longitude": 34.83018,
+  "timezone": "Asia/Jerusalem",
+  "current": {
+    "time": "2026-07-20T13:00",
+    "interval": 900,
+    "temperature_2m": 36.8,
+    "apparent_temperature": 40.5,
+    "relative_humidity_2m": 48
+  },
+  "hourly": {
+    "time": [
+      "2026-07-20T13:00", "2026-07-20T14:00", "2026-07-20T15:00",
+      "2026-07-20T16:00", "2026-07-20T17:00", "2026-07-20T18:00"
+    ],
+    "apparent_temperature": [40.5, 41.6, 42.0, 41.2, 39.8, 37.9]
+  }
+}

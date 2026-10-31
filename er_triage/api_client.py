@@ -6,6 +6,7 @@ import requests
 
 from . import config
 from .models import HourlyForecast, WeatherSnapshot
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -144,4 +145,23 @@ class OpenMeteoClient:
 
         logger.info("Weather received: apparent temperature %.1f°C at %s",
                     snapshot.apparent_temperature_c, snapshot.observed_at)
+        return snapshot
+
+class OfflineWeatherClient:
+    def __init__(self, file_path=config.WEATHER_SAMPLE_FILE):
+        self.file_path = file_path
+
+    def get_weather(self):
+        try:
+            with open(self.file_path, encoding="utf-8") as sample_file:
+                payload = json.load(sample_file)
+        except FileNotFoundError as error:
+            logger.warning("Weather sample file not found: %s", self.file_path)
+            raise WeatherDataError(f"Weather sample file not found: {self.file_path}") from error
+        except json.JSONDecodeError as error:
+            logger.warning("Weather sample file is not valid JSON: %s", self.file_path)
+            raise WeatherDataError(f"Weather sample file is not valid JSON: {self.file_path}") from error
+
+        snapshot = parse_weather_payload(payload, "simulated")
+        logger.info("Simulated weather loaded from %s", self.file_path)
         return snapshot

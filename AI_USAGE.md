@@ -221,3 +221,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - HTTP 401 raises `WeatherHTTPError` after a single call, without retry.
 - What we verified: ran `python -m pytest -v` (67 tests passed, no network and no real waiting); sent one real request on 2026-10-31 and received an apparent temperature of 21.9°C (level `normal`) with six forecast hours; sent one request with latitude 999 and the real service returned HTTP 400, which became `WeatherHTTPError` with a single attempt.
 - What we decided: the session and the sleep function are passed in through the constructor, so the tests replace the network and the waiting and not the function under test. Only `Timeout` and `ConnectionError` are retried; HTTP errors, invalid JSON and invalid fields are not, because a new attempt would return the same answer. Special handling of 429 and 503 is optional and was not implemented.
+### T4 – Offline weather client and demo data
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the sample file, the client and the test cases, without changing code. The test code was run against our implementation outside the repository before it was added.
+- Expected results we defined ourselves:
+  - `data/weather_sample.json` is loaded with `source="simulated"`, an apparent temperature of 40.5 (level `danger`) and a forecast maximum of 42.0.
+  - A sample file with `"hot"` as the apparent temperature is rejected with `WeatherDataError`, exactly like a live response with the same value.
+- What we verified: ran `python -m pytest -v` (72 tests passed); loaded the demo file and a missing file by hand and saw the expected results and log messages.
+- What we decided: the sample data is fictional and describes a summer day, so that the demo shows patients being flagged; the real service returned about 22°C at the time of development. The offline client uses the same validation function and the same error types as the live client, so a broken demo file is handled like a failed request, and its data is always marked as simulated.
