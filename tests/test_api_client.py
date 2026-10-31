@@ -6,12 +6,16 @@ import pytest
 import requests
 
 from er_triage.api_client import (
+    OfflineWeatherClient,
     OpenMeteoClient,
     WeatherConnectionError,
     WeatherDataError,
     WeatherHTTPError,
     parse_weather_payload,
 )
+import json
+from pathlib import Path
+
 # Based on a real Open-Meteo response received on 2026-10-29
 VALID_PAYLOAD = {
     "current": {
@@ -207,3 +211,50 @@ def test_missing_required_field_is_not_retried(client, session, sleep):
 
     assert session.get.call_count == 1
     sleep.assert_not_called()
+
+SAMPLE_WEATHER_FILE = Path(__file__).parent.parent / "data" / "weather_sample.json"
+
+
+def write_weather_file(tmp_path, content):
+    file_path = tmp_path / "weather.json"
+    file_path.write_text(content, encoding="utf-8")
+    return file_path
+
+
+def test_offline_client_reads_valid_file_as_simulated(tmp_path):
+    file_path = write_weather_file(tmp_path, json.dumps(VALID_PAYLOAD))
+
+    snapshot = OfflineWeatherClient(file_path).get_weather()
+
+    assert snapshot.source == "simulated"
+    assert snapshot.apparent_temperature_c == 24.0
+    assert len(snapshot.forecast) == 6
+
+
+def test_offline_client_rejects_broken_json(tmp_path):
+    file_path = write_weather_file(tmp_path, '{"current": {')
+
+    with pytest.raises(WeatherDataError, match="not valid JSON"):
+        OfflineWeatherClient(file_path).get_weather()
+
+
+def test_offline_client_rejects_missing_file(tmp_path):
+    with pytest.raises(WeatherDataError, match="not found"):
+        OfflineWeatherClient(tmp_path / "missing.json").get_weather()
+
+
+def test_offline_client_uses_the_same_validation_as_the_live_client(tmp_path):
+    broken_payload = copy.deepcopy(VALID_PAYLOAD)
+    broken_payload["current"]["apparent_temperature"] = "hot"
+    file_path = write_weather_file(tmp_path, json.dumps(broken_payload))
+
+    with pytest.raises(WeatherDataError, match="apparent_temperature"):
+        OfflineWeatherClient(file_path).get_weather()
+
+
+def test_demo_weather_file_describes_a_dangerous_heat_day():
+    snapshot = OfflineWeatherClient(SAMPLE_WEATHER_FILE).get_weather()
+
+    assert snapshot.source == "simulated"
+    assert snapshot.apparent_temperature_c == 40.5
+    assert max(hour.apparent_temperature_c for hour in snapshot.forecast) == 42.0
