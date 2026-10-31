@@ -230,3 +230,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - A sample file with `"hot"` as the apparent temperature is rejected with `WeatherDataError`, exactly like a live response with the same value.
 - What we verified: ran `python -m pytest -v` (72 tests passed); loaded the demo file and a missing file by hand and saw the expected results and log messages.
 - What we decided: the sample data is fictional and describes a summer day, so that the demo shows patients being flagged; the real service returned about 22°C at the time of development. The offline client uses the same validation function and the same error types as the live client, so a broken demo file is handled like a failed request, and its data is always marked as simulated.
+### T7 – Strategy pattern: flagging rules
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the class structure and the test cases, without changing code. The test code was run against our implementation outside the repository before it was added.
+- Expected results we defined ourselves, before any code existed, and that the tests check on `data/sample_data.jsonl`:
+  - At the `danger` level exactly `P005` and `P011` are selected.
+  - At the `caution` level only `P011` is selected (`P005` is 52 years old).
+- What we verified: ran `python -m pytest -v` (88 tests passed); checked that `strategies.py` contains no type checks; checked the age boundary (64 is not at risk, 65 is).
+- What we decided: the list of heat-sensitive words and the age 65 are decisions of the group and are kept as constants in one place. The conditions shared by all strategies (waiting, urgency above 1, not already flagged) are written once in the base class. A third strategy that selects nobody is used for the `normal` level, so the service does not need a condition on the heat level.
