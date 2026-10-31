@@ -212,3 +212,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - A JSONL line with the clock time `06:30:00` is loaded with today's date, and `25:00:00` on line 2 raises `ValueError` mentioning line 2.
 - What we verified: ran `python -m pytest -v` (58 tests passed). The repository tests write their own files in `tmp_path` and do not depend on `data/sample_data.jsonl`.
 - What we added beyond the plan: a test that equal urgency is ordered by arrival time, because it is a central Stage 1 rule that was not covered, and a test that today's arrival time is accepted, so the rejection tests cannot pass with code that rejects every date.
+### T3 – GET request, error handling and Retry
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the client structure, the retry rules and the test cases, without changing code. The test code was run against our implementation outside the repository before it was added.
+- Expected results we defined ourselves:
+  - Three `ConnectionError`s raise `WeatherConnectionError` after exactly 3 calls, with waits of 1 and then 2 seconds.
+  - HTTP 401 raises `WeatherHTTPError` after a single call, without retry.
+- What we verified: ran `python -m pytest -v` (67 tests passed, no network and no real waiting); sent one real request on 2026-10-31 and received an apparent temperature of 21.9°C (level `normal`) with six forecast hours; sent one request with latitude 999 and the real service returned HTTP 400, which became `WeatherHTTPError` with a single attempt.
+- What we decided: the session and the sleep function are passed in through the constructor, so the tests replace the network and the waiting and not the function under test. Only `Timeout` and `ConnectionError` are retried; HTTP errors, invalid JSON and invalid fields are not, because a new attempt would return the same answer. Special handling of 429 and 503 is optional and was not implemented.
