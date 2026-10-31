@@ -155,3 +155,16 @@ Claude Code (Anthropic) was used after the lecturer's feedback on Stage 1. It wa
 - Run the data checks and the deliberate-error checks described above.
 
 The suggested changes were reviewed, run and checked before they were committed. The responsibility for the code and the decisions remains with the student.
+---
+
+## Stage 2
+
+### T1 – Configuration and secrets
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed a plan for the task (file names, variable names, defaults, error messages) and the test cases, without changing code. The plan was approved before any file was created.
+- Expected results we defined and checked ourselves:
+  - When a variable is not set, the default value is used.
+  - A value that cannot be converted, such as `WEATHER_MAX_ATTEMPTS=abc` or `2.5` for a whole-number setting, raises `ValueError` with the variable name in the message.
+- What we verified: ran `python -m pytest -v` (6 tests passed); loaded `config.py` with an invalid environment variable and saw the expected error; checked with `git check-ignore` that `.env` is ignored and `.env.example` is not.
+- What we decided: the tests check the `read_*` functions and not the module constants, because the constants are read once when the module is imported. The Open-Meteo service needs no API key, so `.env.example` contains only settings and no secrets.
