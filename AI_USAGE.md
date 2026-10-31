@@ -178,3 +178,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - A missing field, a text value, `True`, an out-of-range value and forecast lists of different length each raise `WeatherDataError` naming the problem.
 - What we verified: ran `python -m pytest -v` (18 tests passed); parsed one new live response from the service with `parse_weather_payload` and it was accepted.
 - What we decided: the tool suggested also checking that the time fields are valid ISO date-times (stricter than the original plan, which only required a string). We kept this check because the real response passes it.
+### T5 – Reassessment flag on the patient
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the new fields, the method and the test cases, without changing code. The plan was approved before the change was made.
+- Decision made by the group: the tool asked whether a patient who is not waiting may be flagged. We decided that `flag_for_reassessment()` raises `ValueError` for such a patient, so the model itself cannot reach an inconsistent state.
+- Expected results we defined and checked ourselves:
+  - A new patient is not flagged; after `flag_for_reassessment("heat:danger")` it is flagged with that reason.
+  - After `start_treatment()` the flag is cleared, and flagging a patient who is `in_treatment` or `completed` raises `ValueError`.
+- What we verified: ran `python -m pytest -v` (24 tests passed), including a check that all 15 patients from `data/sample_data.jsonl` still load and are not flagged; ran `python main.py` and the Stage 1 demo still completes.

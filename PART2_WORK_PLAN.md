@@ -191,7 +191,7 @@ class WeatherSnapshot:
 #   self.needs_reassessment = False
 #   self.reassessment_reason = None
 
-def flag_for_reassessment(self, reason): ...   # מסמן ושומר סיבה, למשל "heat:danger"
+def flag_for_reassessment(self, reason): ...   # מסמן ושומר סיבה, למשל "heat:danger"; ValueError אם לא waiting
 def start_treatment(self): ...                  # כמו היום + מוריד את הסימון
 ```
 
@@ -525,7 +525,7 @@ LOG_LEVEL                INFO
 **ענף:** `task/T5-patient-flag` | **תלוי ב:** T0
 
 - [ ] להוסיף ל־`Patient` את `needs_reassessment=False` ו־`reassessment_reason=None`.
-- [ ] `flag_for_reassessment(reason)` מסמן ושומר סיבה.
+- [ ] `flag_for_reassessment(reason)` מסמן ושומר סיבה. מטופל שאינו בסטטוס `waiting` נדחה עם `ValueError` (הוחלט בקבוצה).
 - [ ] `start_treatment()` ממשיך לשנות סטטוס כמו היום, ובנוסף מוריד את הסימון ומאפס את הסיבה.
 - [ ] `patient_from_dict` וטעינת `sample_data.jsonl` עובדים בלי שינוי בקובץ הנתונים.
 
