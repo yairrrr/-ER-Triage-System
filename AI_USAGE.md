@@ -168,3 +168,13 @@ The suggested changes were reviewed, run and checked before they were committed.
   - A value that cannot be converted, such as `WEATHER_MAX_ATTEMPTS=abc` or `2.5` for a whole-number setting, raises `ValueError` with the variable name in the message.
 - What we verified: ran `python -m pytest -v` (6 tests passed); loaded `config.py` with an invalid environment variable and saw the expected error; checked with `git check-ignore` that `.env` is ignored and `.env.example` is not.
 - What we decided: the tests check the `read_*` functions and not the module constants, because the constants are read once when the module is imported. The Open-Meteo service needs no API key, so `.env.example` contains only settings and no secrets.
+
+### T2 – Weather model and response validation
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the data classes, the validation rules for each field and the test cases, without changing code. The plan was approved before the code was written.
+- Expected results we defined and checked ourselves:
+  - The real Open-Meteo response from 2026-10-29 is converted to a `WeatherSnapshot` with the same values (apparent temperature 24.0, six forecast hours).
+  - A missing field, a text value, `True`, an out-of-range value and forecast lists of different length each raise `WeatherDataError` naming the problem.
+- What we verified: ran `python -m pytest -v` (18 tests passed); parsed one new live response from the service with `parse_weather_payload` and it was accepted.
+- What we decided: the tool suggested also checking that the time fields are valid ISO date-times (stricter than the original plan, which only required a string). We kept this check because the real response passes it.
