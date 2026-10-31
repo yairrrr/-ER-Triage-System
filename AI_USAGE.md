@@ -203,3 +203,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - The sequential version takes at least the sum of the delays (about 0.30 s) and the concurrent version takes less than 0.25 s.
 - What we verified: ran `python -m pytest -v` (36 tests passed); ran both versions on `data/lab_results.json` and measured 0.303 s (sequential) against 0.152 s (concurrent) with identical results; checked that the async module uses only `asyncio.sleep` and no `time.sleep` or HTTP calls.
 - What we decided: the lab values in `data/lab_results.json` are fictional and are not based on medical reference ranges, so whether a result is critical is stored in the data (`is_critical`) and not calculated in the code. Handling a failure of a single task while collecting the others is optional in the assignment and was not implemented.
+### T13 – Stage 1 regression tests
+
+- Tool: Claude Code (Anthropic).
+- The tool first listed the Stage 1 behaviours to protect and the test cases, without changing code. The list included the cases from the lecturer's feedback (`True` and `"1"` as values, a duplicate patient, an invalid or non-today arrival time).
+- Expected results we defined ourselves:
+  - With equal urgency, the patient who arrived earlier is first in the queue; a later patient with urgency 1 is taken before an earlier patient with urgency 3.
+  - A JSONL line with the clock time `06:30:00` is loaded with today's date, and `25:00:00` on line 2 raises `ValueError` mentioning line 2.
+- What we verified: ran `python -m pytest -v` (58 tests passed). The repository tests write their own files in `tmp_path` and do not depend on `data/sample_data.jsonl`.
+- What we added beyond the plan: a test that equal urgency is ordered by arrival time, because it is a central Stage 1 rule that was not covered, and a test that today's arrival time is accepted, so the rejection tests cannot pass with code that rejects every date.
