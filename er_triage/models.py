@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import date, datetime
+from dataclasses import dataclass
 
 def is_whole_number(value):
     # bool is a subclass of int, so True/False must be rejected explicitly
@@ -222,3 +223,18 @@ class EmergencyQueue:
 
     def __repr__(self):
         return f"EmergencyQueue(patients={self.patients!r})"
+
+@dataclass(frozen=True)
+class HourlyForecast:
+    time: str
+    apparent_temperature_c: float
+
+
+@dataclass(frozen=True)
+class WeatherSnapshot:
+    observed_at: str
+    temperature_c: float
+    apparent_temperature_c: float
+    humidity_percent: float
+    forecast: tuple[HourlyForecast, ...]
+    source: str
