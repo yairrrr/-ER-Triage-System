@@ -239,3 +239,13 @@ The suggested changes were reviewed, run and checked before they were committed.
   - At the `caution` level only `P011` is selected (`P005` is 52 years old).
 - What we verified: ran `python -m pytest -v` (88 tests passed); checked that `strategies.py` contains no type checks; checked the age boundary (64 is not at risk, 65 is).
 - What we decided: the list of heat-sensitive words and the age 65 are decisions of the group and are kept as constants in one place. The conditions shared by all strategies (waiting, urgency above 1, not already flagged) are written once in the base class. A third strategy that selects nobody is used for the `normal` level, so the service does not need a condition on the heat level.
+### T8 – Observer pattern: flag event, audit log and nurse worklist
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the event, the publisher, the two observers and the test cases, without changing code. The test code was run against our implementation outside the repository before it was added.
+- Expected results we defined ourselves:
+  - One published event creates exactly one audit entry, `Patient O001 flagged for reassessment (heat level: danger)`, and adds the patient to the nurse worklist.
+  - The worklist is ordered by urgency and then by arrival time, and a patient who started treatment leaves it without any change to the worklist itself.
+- What we verified: ran `python -m pytest -v` (97 tests passed); checked that the log contains the patient ID and not the name; checked that the publisher works with any object that has `notify()`, without type checks.
+- What we corrected: the module file was first created in the `tests` folder by mistake and was moved to `er_triage/` with `git mv`.
+- What we decided: the worklist reads the flag from the patient, so starting treatment removes the patient from the list automatically. `claim_next()` is not thread-safe yet; the lock is added in T12.
