@@ -249,3 +249,12 @@ The suggested changes were reviewed, run and checked before they were committed.
 - What we verified: ran `python -m pytest -v` (97 tests passed); checked that the log contains the patient ID and not the name; checked that the publisher works with any object that has `notify()`, without type checks.
 - What we corrected: the module file was first created in the `tests` folder by mistake and was moved to `er_triage/` with `git mv`.
 - What we decided: the worklist reads the flag from the patient, so starting treatment removes the patient from the list automatically. `claim_next()` is not thread-safe yet; the lock is added in T12.
+### T12 – Threads and Lock on the nurse worklist
+
+- Tool: Claude Code (Anthropic).
+- The tool first explained the race condition and proposed the lock placement and the test cases, without changing code. The test code was run five times against our implementation outside the repository before it was added.
+- Expected results we defined ourselves:
+  - Five flagged patients and four nurses: exactly five claims, no patient claimed twice, and an empty worklist at the end.
+  - One patient and six nurses: exactly one claim, and no nurse fails.
+- What we verified: ran the full test suite three times in a row (103 tests passed each time). The tests check the number of claims and the final state, not which nurse took which patient. In an experiment outside the repository the lock was replaced by an object that does not lock and a 1 ms pause was added between the check and the removal: three of four nurse threads failed with `ValueError: list.remove(x): x not in list`, because two nurses had selected the same patient. With the real lock the same experiment finished without errors.
+- What we decided: one lock protects the whole check-select-remove sequence and every other access to the shared list. Sorting moved to a private method that does not lock, because `threading.Lock` is not re-entrant and `claim_next()` would otherwise wait for itself. Each nurse has her own result list, so only the worklist is shared.
