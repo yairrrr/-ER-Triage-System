@@ -25,6 +25,18 @@ def classify_heat_level(apparent_temperature_c):
     return "normal"
 
 
+def summarize_forecast(forecast):
+    if not forecast:
+        raise ValueError("Forecast must contain at least one hour")
+    # max() keeps the earliest hour when two hours share the highest temperature
+    peak = max(forecast, key=lambda hour: hour.apparent_temperature_c)
+    return {
+        "max_apparent_temperature_c": peak.apparent_temperature_c,
+        "time": peak.time,
+        "expected_level": classify_heat_level(peak.apparent_temperature_c),
+    }
+
+
 @dataclass
 class HeatCheckResult:
     status: str
