@@ -1,4 +1,5 @@
 from datetime import datetime
+from .services import summarize_forecast
 
 def generate_waiting_report(patients):
     waiting_patients = [patient for patient in patients if patient.is_waiting]
@@ -32,3 +33,27 @@ def generate_waiting_report(patients):
             }
     return report
 
+def generate_heat_report(patients, result):
+    flagged_patients = [patient for patient in patients if patient.is_waiting and patient.needs_reassessment]
+    report = {
+        "data_source": "unavailable",
+        "status": result.status,
+        "heat_level": result.heat_level,
+        "observed_at": None,
+        "apparent_temperature_c": None,
+        "forecast_max_c": None,
+        "forecast_max_time": None,
+        "forecast_level": None,
+        "flagged_count": len(flagged_patients),
+        "flagged_patient_ids": [patient.patient_id for patient in flagged_patients],
+        "error_message": result.error_message,
+    }
+    if result.snapshot is not None:
+        forecast = summarize_forecast(result.snapshot.forecast)
+        report["data_source"] = result.snapshot.source
+        report["observed_at"] = result.snapshot.observed_at
+        report["apparent_temperature_c"] = result.snapshot.apparent_temperature_c
+        report["forecast_max_c"] = forecast["max_apparent_temperature_c"]
+        report["forecast_max_time"] = forecast["time"]
+        report["forecast_level"] = forecast["expected_level"]
+    return report

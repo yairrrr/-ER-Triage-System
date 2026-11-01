@@ -267,3 +267,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - When the weather service fails (connection, HTTP or invalid data), nobody is flagged, the audit log and the worklist stay empty, and the result is `unavailable`.
 - What we verified: ran `python -m pytest -v` (116 tests passed after bringing in T12). Only the weather client is replaced by a mock; the service, strategies and observers in the tests are the real ones.
 - What we decided: the service catches only `WeatherServiceError`, so a real bug (for example `RuntimeError`) is not reported as an unavailable service. The strategy is taken from a dictionary by heat level, so the service has no condition on the level. A patient is flagged before the event is published, because the worklist shows only flagged patients. The service checks at creation that a strategy exists for every heat level.
+### T10 – Heat report
+
+- Tool: Claude Code (Anthropic).
+- The tool first proposed the report fields and the forecast summary, and listed the test cases, without changing code. The test code was run against our implementation outside the repository before it was added.
+- Expected results we defined ourselves:
+  - For the demo forecast the peak is 42.0°C at 15:00 with the expected level `danger`.
+  - When the weather data is unavailable, every weather field in the report is empty, `data_source` is `unavailable` and nobody is counted as flagged.
+- What we verified: ran `python -m pytest -v` (123 tests passed), including a check that the Stage 1 waiting report still counts only waiting patients.
+- What we decided: the forecast uses the same `classify_heat_level` rule as the current decision. The flagged patients are counted from the patients themselves, so a patient who started treatment is not counted. `data_source` is taken from the weather snapshot, so simulated data cannot appear as live data.
