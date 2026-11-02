@@ -286,3 +286,12 @@ The suggested changes were reviewed, run and checked before they were committed.
 - What we verified: ran the full test suite in PowerShell (131 tests passed) and completed the offline demonstration successfully. The tests cover the report, audit log, nurse worklist, output order and client selection; the live client is mocked, so no real LIVE execution was verified.
 - What we corrected: after reviewing the code review findings, we requested tests for the entry points and the absence of fallback, a worklist sorting test with unsorted input and different urgency levels, and a clear message when the Threads demo has no patients to claim.
 - What we decided: all dependencies are connected in `main.py`, and Stage 2 loads its own patients so the Stage 1 demonstration cannot change its results. Offline is the default; only `--live` selects Open-Meteo. Lab results and nurse claims are marked as simulated, and an empty worklist does not cause extra patients to be created.
+### T15 – Live verification
+
+- Tool: OpenAI Codex (OpenAI), used to help plan the verification and document the results supplied by the team.
+- The tool first proposed the command, the expected output and the evidence to keep, without changing code. We performed the real execution ourselves and supplied the results for documentation.
+- Expected results we defined ourselves:
+  - A successful real request is marked as LIVE with status `applied`, and shows the observation time, apparent temperature, heat level and forecast maximum.
+  - An apparent temperature below 32°C gives level `normal` and flags nobody.
+- What we verified: ran `python main.py --live` on 2026-11-02 at 18:52:19 +02:00. Open-Meteo returned status `applied`, observation time `2026-11-02T18:45`, apparent temperature 27.3°C, forecast maximum 28.5°C, heat level `normal` and 0 flagged patients. This was the team's real LIVE run, not a mocked test or an execution by the tool.
+- What we decided: T15 needed no application or test changes. We kept the supplied LIVE evidence in `docs/T15_LIVE_VERIFICATION.md` for inclusion in the Stage 2 README during T16, separately from the simulated demonstrations.
