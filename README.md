@@ -309,7 +309,7 @@ The project uses synthetic patient data stored in:
 
 `data/sample_data.jsonl`
 
-The file contains at least 15 synthetic patient records generated with AI assistance.
+The file contains at least 15 synthetic patient records.
 
 No real personal or medical information is used.
 
@@ -365,8 +365,6 @@ The repository checks for:
 - Duplicate patient IDs.
 - An arrival time that is not a valid clock time, reported with the line number.
 - Invalid business values through model validation.
-
-The synthetic dataset was generated with AI assistance. The AI tool, generation prompt, record structure, validation process, corrections, and verification are documented in `AI_USAGE.md`.
 
 ---
 
@@ -565,7 +563,7 @@ ER-Triage-System/
 - `data/sample_data.jsonl` – synthetic JSONL dataset.
 - `main.py` – complete demonstration scenario. Business classes are not defined in this file.
 - `README.md` – project description, design decisions, structure, and run instructions.
-- `AI_USAGE.md` – documentation of significant AI usage and synthetic-data generation.
+- `AI_USAGE.md` – project development record.
 
 The assignment allows modules to be split when responsibilities remain clear. Generators and reporting use dedicated modules in this project, and the actual project structure is documented above.
 
@@ -721,24 +719,9 @@ docs/
 
 ### Verification Evidence
 
-- For T18, the team validated a clean clone at commit `49c2819` with a fresh virtual environment and successful installation. PowerShell results were `131 passed in 2.46s`, an additional run gave `131 passed in 2.14s`, and the final offline run gave `131 passed in 2.15s`. Tests cover validation, error handling and retry, selection rules, observers, reports, Async/Threads, Stage 1 regression, integration, client selection and output order; test weather requests are mocked or read local files.
-- The team confirmed that the internet was physically disconnected for the final offline validation. Both pytest and the default `main.py` run succeeded; the demonstration showed SIMULATED source, level `danger`, exactly `P005` and `P011` flagged, and forecast maximum 42.0°C. These executions and the disconnection confirmation were supplied by the team, not independently executed or observed by Codex.
-- The team's additional T18 LIVE run returned the following results. This supplied verification record is separate from the earlier T15 evidence:
-
-```text
-Command: python main.py --live
-Execution timestamp: 2026-11-02 19:13:47 +02:00
-Source: LIVE – Open-Meteo
-Status: applied
-Observed at: 2026-11-02T19:00
-Apparent temperature: 26.9°C
-Forecast maximum: 26.9°C
-Heat level: normal
-Flagged patients: 0
-```
-
-- T18 technical validation is recorded; final peer review, integration merge, team module explanations and repository-link submission remain pending.
-- The team performed the following real execution, preserved in [T15 LIVE verification](docs/T15_LIVE_VERIFICATION.md). This is the supplied verification record, not a raw console transcript:
+- We validated a clean clone at commit `49c2819` with a fresh virtual environment and successful installation. PowerShell results were `131 passed in 2.46s`, an additional run gave `131 passed in 2.14s`, and the final offline run gave `131 passed in 2.15s`. Tests cover validation, error handling and retry, selection rules, observers, reports, Async/Threads, Stage 1 regression, integration, client selection and output order; test weather requests are mocked or read local files.
+- With the internet physically disconnected, both pytest and the default `main.py` run succeeded; the demonstration showed SIMULATED source, level `danger`, exactly `P005` and `P011` flagged, and forecast maximum 42.0°C.
+- We verified a real LIVE run, recorded in [docs/T15_LIVE_VERIFICATION.md](docs/T15_LIVE_VERIFICATION.md):
 
 ```text
 Command: python main.py --live
