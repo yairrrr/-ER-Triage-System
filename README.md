@@ -309,7 +309,7 @@ The project uses synthetic patient data stored in:
 
 `data/sample_data.jsonl`
 
-The file contains at least 15 synthetic patient records generated with AI assistance.
+The file contains at least 15 synthetic patient records.
 
 No real personal or medical information is used.
 
@@ -365,8 +365,6 @@ The repository checks for:
 - Duplicate patient IDs.
 - An arrival time that is not a valid clock time, reported with the line number.
 - Invalid business values through model validation.
-
-The synthetic dataset was generated with AI assistance. The AI tool, generation prompt, record structure, validation process, corrections, and verification are documented in `AI_USAGE.md`.
 
 ---
 
@@ -565,7 +563,7 @@ ER-Triage-System/
 - `data/sample_data.jsonl` – synthetic JSONL dataset.
 - `main.py` – complete demonstration scenario. Business classes are not defined in this file.
 - `README.md` – project description, design decisions, structure, and run instructions.
-- `AI_USAGE.md` – documentation of significant AI usage and synthetic-data generation.
+- `AI_USAGE.md` – project development record.
 
 The assignment allows modules to be split when responsibilities remain clear. Generators and reporting use dedicated modules in this project, and the actual project structure is documented above.
 
@@ -583,7 +581,7 @@ requires-python = ">=3.11"
 
 in `pyproject.toml`.
 
-The current project stage uses the Python standard library and does not require additional external packages.
+The Stage 1 components use the Python standard library. For the current application, install the dependencies described in Stage 2 below before running the demonstration.
 
 ---
 
@@ -641,3 +639,100 @@ The demonstration loads `data/sample_data.jsonl`, converts dictionaries into bus
 - Context manager during normal execution.
 - Context manager during an exception.
 - Waiting-patient reporting.
+
+---
+
+## Stage 2 (שלב 2)
+
+### What Was Added
+
+- Heat alerts help the nurse identify vulnerable waiting patients for reassessment. The system flags and reports patients; it does not change clinical urgency or queue order. Starting treatment clears the flag. The heat report includes the current level, forecast peak and flagged patient IDs.
+
+### Setup and Commands
+
+- Use Python 3.11 or newer and an activated virtual environment. From the repository root, install with `pip install -e ".[dev]"` (requests, python-dotenv and pytest).
+- See [.env.example](.env.example) for optional local settings: API URL, hospital coordinates, timeout, retry attempts and delay, forecast hours, sample file and log level. Copy it to `.env` only if needed; never commit `.env`. No API key is required.
+
+```text
+python main.py
+python main.py --live
+python -m pytest
+```
+
+- The default runs Stage 1 followed by Stage 2 without network access, using `data/weather_sample.json` and marking it SIMULATED. `--live` selects Open-Meteo and marks the source LIVE; a failed request never falls back to sample data. The failure demonstration, lab results and nurse claims are separately marked `[SIMULATED]`.
+
+### Stage 2 Structure
+
+The Stage 1 modules remain in place. The following tree shows the Stage 2 additions and shared files extended for this stage:
+
+```text
+main.py
+.env.example
+pyproject.toml
+er_triage/
+    config.py
+    api_client.py
+    models.py
+    strategies.py
+    observers.py
+    services.py
+    reporting.py
+    async_processing.py
+    threaded_processing.py
+data/
+    sample_data.jsonl
+    weather_sample.json
+    lab_results.json
+tests/
+    conftest.py
+    test_*.py
+docs/
+    T15_LIVE_VERIFICATION.md
+```
+
+- `config.py`: environment settings and optional `.env` loading.
+- `api_client.py`: live/offline clients, payload validation and connection retry.
+- `models.py`: reassessment flags and immutable `WeatherSnapshot` / `HourlyForecast` records alongside the Stage 1 classes.
+- `strategies.py`: interchangeable patient selection rules for each heat level.
+- `observers.py`: flag events, audit logging and the nurse worklist.
+- `services.py`: heat classification, forecast summary and `HeatAlertService` orchestration.
+- `reporting.py`: `generate_heat_report()` alongside the unchanged Stage 1 waiting report.
+- `async_processing.py`: simulated sequential and concurrent lab result collection.
+- `threaded_processing.py`: nurse Threads that claim work until the shared list is empty.
+- `main.py` connects dependencies and presents both stages; `tests/` covers individual components, Stage 1 regression and integration.
+
+### API and Error Handling
+
+- [Open-Meteo Forecast API documentation](https://open-meteo.com/en/docs): one GET to `https://api.open-meteo.com/v1/forecast` requests current temperature, apparent temperature and humidity plus hourly apparent temperature. Defaults are Tel Aviv (`32.0853`, `34.7818`), six forecast hours, `timezone=auto` and a five-second timeout. The client calls `raise_for_status()` before reading JSON.
+- Validation requires `current` and `hourly` objects, ISO observation/forecast times, current temperature and apparent temperature in −60..60°C, humidity in 0..100, and nonempty, equally sized hourly time/temperature lists with temperatures in −60..60°C. Numeric fields reject booleans. Valid data becomes a snapshot marked `live` or `simulated`; both clients share the parser.
+- Four failure categories are handled: communication failure, HTTP error, malformed JSON, and missing/invalid fields. Timeout/connection failures become `WeatherConnectionError` after three attempts by default, with waits of one then two seconds and no final wait. HTTP errors become `WeatherHTTPError`; malformed JSON and invalid fields become `WeatherDataError`. HTTP errors (including authorization failures) and bad data are not retried because repeating the same request does not correct the underlying problem.
+- The service catches `WeatherServiceError`, logs a warning, returns `unavailable` and makes no patient changes. It does not substitute sample weather or hide unrelated programming errors. Only `main.py` configures logging; patient logs contain IDs rather than names.
+
+### Rules and Architecture
+
+- The current apparent temperature determines the level: below 32°C is `normal`, 32–below 39°C is `caution`, and 39°C or above is `danger`. These rounded thresholds approximate NWS Heat Index categories; Open-Meteo uses a different apparent-temperature formula, so this is a project assumption rather than an equivalent medical measure.
+- Eligible patients are waiting, have urgency above 1 and are not already flagged. Heat-sensitive complaints contain `dizz`, `weak`, `confus`, `breath` or `fever`, case-insensitively. `normal` selects nobody; `caution` requires both age ≥65 and a matching complaint; `danger` requires either. For the sample patients, danger flags exactly `P005` and `P011`, while caution flags only `P011`.
+- Strategy maps each level to `NoFlaggingStrategy`, `VulnerableOnlyStrategy` or `AllAtRiskStrategy`, keeping selection rules out of the service. Observer publishes each `PatientFlaggedEvent` to `AuditLogObserver` and `ReassessmentWorklist`, keeping these reactions separate. The worklist is ordered by urgency and arrival time.
+- Dependency injection in `main.py` supplies the weather client, publisher, observers and strategy dictionary. Tests can replace the client or HTTP session and retry sleep without using a network or changing the business rules.
+- Async lab tasks simulate waiting with `asyncio.sleep`; the demo compares sequential collection with `asyncio.gather`, prints timings and preserves input order in the results. The lab data is fictional, and critical results are identified by its `is_critical` field.
+- The shared nurse worklist uses one Lock around checking, selecting and removing a patient, preventing two nurses from claiming the same patient. All Threads start before they are joined; there is no network call inside the lock. Which nurse claims a patient is not deterministic. An empty list produces a message that no actual claims occurred.
+
+### Verification Evidence
+
+- We validated a clean clone at commit `49c2819` with a fresh virtual environment and successful installation. PowerShell results were `131 passed in 2.46s`, an additional run gave `131 passed in 2.14s`, and the final offline run gave `131 passed in 2.15s`. Tests cover validation, error handling and retry, selection rules, observers, reports, Async/Threads, Stage 1 regression, integration, client selection and output order; test weather requests are mocked or read local files.
+- With the internet physically disconnected, both pytest and the default `main.py` run succeeded; the demonstration showed SIMULATED source, level `danger`, exactly `P005` and `P011` flagged, and forecast maximum 42.0°C.
+- We verified a real LIVE run, recorded in [docs/T15_LIVE_VERIFICATION.md](docs/T15_LIVE_VERIFICATION.md):
+
+```text
+Command: python main.py --live
+Execution timestamp: 2026-11-02 18:52:19 +02:00
+Source: LIVE – Open-Meteo
+Status: applied
+Observed at: 2026-11-02T18:45
+Apparent temperature: 27.3°C
+Forecast maximum: 28.5°C
+Heat level: normal
+Flagged patients: 0
+```
+
+- `classify_heat_level` was developed in three separate TDD commits: [Red — failing tests](https://github.com/yairrrr/-ER-Triage-System/commit/1c0672d82a283dffa9aed04ba0c7c6bca356ac8e), [Green — thresholds](https://github.com/yairrrr/-ER-Triage-System/commit/392c72bba5b9212eb5d3692f224c8744f1106408), and [Refactor — named constants](https://github.com/yairrrr/-ER-Triage-System/commit/49cbba051412c66ff854d54ae58dc85949ec94f9). The hashes were verified from Git history.

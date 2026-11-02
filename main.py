@@ -1,3 +1,21 @@
+import argparse
+import asyncio
+import logging
+import time
+
+import requests
+
+from er_triage import config
+from er_triage.api_client import OfflineWeatherClient, OpenMeteoClient, WeatherConnectionError
+from er_triage.async_processing import (
+    collect_lab_results_concurrent, collect_lab_results_sequential,
+    find_critical_patients, load_lab_data,
+)
+from er_triage.observers import AuditLogObserver, EventPublisher, ReassessmentWorklist
+from er_triage.reporting import generate_heat_report
+from er_triage.services import HeatAlertService
+from er_triage.strategies import AllAtRiskStrategy, NoFlaggingStrategy, VulnerableOnlyStrategy
+from er_triage.threaded_processing import nurses_claim_concurrently
 from er_triage.repository import load_patients
 from er_triage.iterators import WaitingPatients
 from er_triage.reporting import generate_waiting_report
@@ -11,7 +29,7 @@ from er_triage.processing import sort_patients_by_urgency, sort_patients_by_prio
 from er_triage.generators import waiting_patients_generator, urgent_waiting_pipeline
 from er_triage.models import EmergencyQueue, Nurse, Doctor, Patient, TriageAssessment
 
-def main():
+def run_stage1_demo():
     patients = load_patients("data/sample_data.jsonl")
 
     # Emergency Queue
@@ -206,6 +224,96 @@ def main():
         print("Caught error:", error)
 
     print("Error session duration:", error_session.duration)
+
+class FailingWeatherClient:
+    def get_weather(self):
+        raise WeatherConnectionError("Simulated weather connection failure")
+
+
+def build_heat_service(weather_client):
+    publisher = EventPublisher()
+    audit_log = AuditLogObserver()
+    worklist = ReassessmentWorklist()
+    publisher.subscribe(audit_log)
+    publisher.subscribe(worklist)
+    strategies = {
+        "normal": NoFlaggingStrategy(),
+        "caution": VulnerableOnlyStrategy(),
+        "danger": AllAtRiskStrategy(),
+    }
+    return HeatAlertService(weather_client, publisher, strategies), audit_log, worklist
+
+
+def display_heat_check(patients, service, audit_log, worklist):
+    result = service.run_check(patients)
+    print("Heat level:", result.heat_level)
+    print("Flagged patient IDs:", result.flagged_patient_ids)
+    for patient in patients:
+        if patient.needs_reassessment:
+            print(patient.patient_id, patient.reassessment_reason)
+    print("Audit log:", audit_log.entries)
+    print("Nurse worklist:", [patient.patient_id for patient in worklist.pending()])
+    print("Heat report:", generate_heat_report(patients, result))
+
+
+def run_stage2_demo(live):
+    print("\n=== Stage 2: Heat Alert ===")
+    patients = load_patients("data/sample_data.jsonl")
+    if live:
+        print("[DATA SOURCE: LIVE – Open-Meteo]")
+        with requests.Session() as session:
+            weather_client = OpenMeteoClient(
+                session, base_url=config.WEATHER_API_URL,
+                latitude=config.HOSPITAL_LATITUDE, longitude=config.HOSPITAL_LONGITUDE,
+                timeout=config.WEATHER_TIMEOUT_SECONDS,
+                forecast_hours=config.WEATHER_FORECAST_HOURS,
+                max_attempts=config.WEATHER_MAX_ATTEMPTS, base_delay=config.WEATHER_BASE_DELAY,
+            )
+            service, audit_log, worklist = build_heat_service(weather_client)
+            display_heat_check(patients, service, audit_log, worklist)
+    else:
+        print(f"[DATA SOURCE: SIMULATED – {config.WEATHER_SAMPLE_FILE}]")
+        service, audit_log, worklist = build_heat_service(
+            OfflineWeatherClient(config.WEATHER_SAMPLE_FILE)
+        )
+        display_heat_check(patients, service, audit_log, worklist)
+
+    print("\n=== Weather Failure [SIMULATED] ===")
+    failure_patients = load_patients("data/sample_data.jsonl")
+    failure_service, failure_audit, failure_worklist = build_heat_service(FailingWeatherClient())
+    display_heat_check(failure_patients, failure_service, failure_audit, failure_worklist)
+
+    print("\n=== Lab Results [SIMULATED] ===")
+    lab_data = load_lab_data("data/lab_results.json")
+    patient_ids = [patient.patient_id for patient in patients if patient.patient_id in lab_data]
+    delays = {patient_id: 0.1 for patient_id in patient_ids}
+    start = time.perf_counter()
+    sequential = asyncio.run(collect_lab_results_sequential(patient_ids, lab_data, delays))
+    sequential_time = time.perf_counter() - start
+    start = time.perf_counter()
+    concurrent = asyncio.run(collect_lab_results_concurrent(patient_ids, lab_data, delays))
+    concurrent_time = time.perf_counter() - start
+    print("Sequential results:", sequential)
+    print("Sequential seconds:", round(sequential_time, 3))
+    print("Concurrent results:", concurrent)
+    print("Concurrent seconds:", round(concurrent_time, 3))
+    print("Critical patient IDs:", find_critical_patients(concurrent))
+
+    print("\n=== Nurse Claims [SIMULATED] ===")
+    if not worklist.pending():
+        print("No patients in the nurse worklist; the Threads demo made no actual claims.")
+    print("Claimed patient IDs:", nurses_claim_concurrently(worklist, ["N1", "N2", "N3"]))
+    print("Remaining worklist:", [patient.patient_id for patient in worklist.pending()])
+
+
+def main():
+    parser = argparse.ArgumentParser(description="ER triage demonstrations")
+    parser.add_argument("--live", action="store_true", help="Use live Open-Meteo weather data")
+    args = parser.parse_args()
+    logging.basicConfig(level=config.LOG_LEVEL)
+    run_stage1_demo()
+    run_stage2_demo(args.live)
+
 
 if __name__ == "__main__":
     main()
