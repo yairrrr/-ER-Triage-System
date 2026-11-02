@@ -258,3 +258,31 @@ def test_demo_weather_file_describes_a_dangerous_heat_day():
     assert snapshot.source == "simulated"
     assert snapshot.apparent_temperature_c == 40.5
     assert max(hour.apparent_temperature_c for hour in snapshot.forecast) == 42.0
+
+@pytest.mark.parametrize("setting, bad_value", [
+    ("max_attempts", 0),
+    ("max_attempts", 2.5),
+    ("timeout", 0),
+    ("timeout", float("nan")),
+    ("base_delay", -1),
+])
+def test_invalid_client_settings_are_rejected_before_any_request(setting, bad_value):
+    session = Mock()
+
+    with pytest.raises(ValueError, match=setting):
+        OpenMeteoClient(session, **{setting: bad_value})
+
+    session.get.assert_not_called()
+
+
+def test_offline_client_rejects_path_that_cannot_be_read(tmp_path):
+    with pytest.raises(WeatherDataError, match="could not be read"):
+        OfflineWeatherClient(tmp_path).get_weather()
+
+
+def test_offline_client_rejects_file_that_is_not_utf8(tmp_path):
+    file_path = tmp_path / "weather.json"
+    file_path.write_bytes(b"\xff\xfe not text")
+
+    with pytest.raises(WeatherDataError, match="not valid JSON"):
+        OfflineWeatherClient(file_path).get_weather()

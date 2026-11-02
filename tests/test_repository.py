@@ -72,3 +72,23 @@ def test_duplicate_patient_id_raises_value_error(tmp_path):
 
     with pytest.raises(ValueError, match="Duplicate patient ID: R001"):
         load_patients(file_path)
+
+def test_line_that_is_not_a_json_object_raises_value_error(tmp_path):
+    file_path = write_jsonl(tmp_path, ['["R001", "Test"]'])
+
+    with pytest.raises(ValueError, match="Line 1 must contain a JSON object"):
+        load_patients(file_path)
+
+
+@pytest.mark.parametrize("field, bad_value, message", [
+    ("assessment", {"chief_complaint": "Headache", "pain_level": 3}, "Missing assessment field on line 1"),
+    ("assessment", "not an object", "Invalid patient data on line 1"),
+    ("age", -5, "Invalid patient data on line 1"),
+])
+def test_invalid_patient_data_raises_value_error_with_line_number(tmp_path, field, bad_value, message):
+    record = patient_record("R001")
+    record[field] = bad_value
+    file_path = write_jsonl(tmp_path, [json.dumps(record)])
+
+    with pytest.raises(ValueError, match=message):
+        load_patients(file_path)

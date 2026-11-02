@@ -1,4 +1,6 @@
+import json
 import logging
+import math
 import time
 from datetime import datetime
 
@@ -6,9 +8,9 @@ import requests
 
 from . import config
 from .models import HourlyForecast, WeatherSnapshot
-import json
 
 logger = logging.getLogger(__name__)
+
 
 class WeatherServiceError(Exception):
     """Base class for every failure of the weather service."""
@@ -82,12 +84,21 @@ def parse_weather_payload(payload, source):
         forecast.append(HourlyForecast(time_value, float(apparent_value)))
 
     return WeatherSnapshot(observed_at, temperature, apparent_temperature, humidity, tuple(forecast), source)
+
+
 class OpenMeteoClient:
     def __init__(self, session, base_url=config.WEATHER_API_URL,
                  latitude=config.HOSPITAL_LATITUDE, longitude=config.HOSPITAL_LONGITUDE,
                  timeout=config.WEATHER_TIMEOUT_SECONDS, forecast_hours=config.WEATHER_FORECAST_HOURS,
                  max_attempts=config.WEATHER_MAX_ATTEMPTS, base_delay=config.WEATHER_BASE_DELAY,
                  sleep=time.sleep):
+        # Settings may come from environment variables, so invalid values are rejected before any request
+        if not isinstance(max_attempts, int) or max_attempts < 1:
+            raise ValueError(f"max_attempts must be a whole number of at least 1, got {max_attempts!r}")
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError(f"timeout must be a positive number of seconds, got {timeout!r}")
+        if not math.isfinite(base_delay) or base_delay < 0:
+            raise ValueError(f"base_delay must be zero or a positive number of seconds, got {base_delay!r}")
         self.session = session
         self.base_url = base_url
         self.latitude = latitude
@@ -147,6 +158,7 @@ class OpenMeteoClient:
                     snapshot.apparent_temperature_c, snapshot.observed_at)
         return snapshot
 
+
 class OfflineWeatherClient:
     def __init__(self, file_path=config.WEATHER_SAMPLE_FILE):
         self.file_path = file_path
@@ -158,7 +170,12 @@ class OfflineWeatherClient:
         except FileNotFoundError as error:
             logger.warning("Weather sample file not found: %s", self.file_path)
             raise WeatherDataError(f"Weather sample file not found: {self.file_path}") from error
-        except json.JSONDecodeError as error:
+        except OSError as error:
+            # For example a directory or a file without read permission
+            logger.warning("Weather sample file could not be read: %s", self.file_path)
+            raise WeatherDataError(f"Weather sample file could not be read: {self.file_path}") from error
+        except ValueError as error:
+            # Covers invalid JSON and text that is not UTF-8
             logger.warning("Weather sample file is not valid JSON: %s", self.file_path)
             raise WeatherDataError(f"Weather sample file is not valid JSON: {self.file_path}") from error
 
