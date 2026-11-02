@@ -276,3 +276,13 @@ The suggested changes were reviewed, run and checked before they were committed.
   - When the weather data is unavailable, every weather field in the report is empty, `data_source` is `unavailable` and nobody is counted as flagged.
 - What we verified: ran `python -m pytest -v` (123 tests passed), including a check that the Stage 1 waiting report still counts only waiting patients.
 - What we decided: the forecast uses the same `classify_heat_level` rule as the current decision. The flagged patients are counted from the patients themselves, so a patient who started treatment is not counted. `data_source` is taken from the weather snapshot, so simulated data cannot appear as live data.
+### T14 – Main integration
+
+- Tool: OpenAI Codex (OpenAI), used to help implement the integration, write tests and review the code against our requirements.
+- The tool first proposed the integration plan and the test cases, without changing code. We reviewed and approved the plan before implementation, keeping the existing interfaces and the Stage 1 behaviour.
+- Expected results we defined ourselves:
+  - The offline demo flags exactly `P005` and `P011`, records the reason `heat:danger`, and reports a forecast maximum of 42.0°C.
+  - When the weather client fails, nobody is flagged and the report is `unavailable`, without falling back to simulated weather. Urgency levels and the clinical queue order stay unchanged.
+- What we verified: ran the full test suite in PowerShell (131 tests passed) and completed the offline demonstration successfully. The tests cover the report, audit log, nurse worklist, output order and client selection; the live client is mocked, so no real LIVE execution was verified.
+- What we corrected: after reviewing the code review findings, we requested tests for the entry points and the absence of fallback, a worklist sorting test with unsorted input and different urgency levels, and a clear message when the Threads demo has no patients to claim.
+- What we decided: all dependencies are connected in `main.py`, and Stage 2 loads its own patients so the Stage 1 demonstration cannot change its results. Offline is the default; only `--live` selects Open-Meteo. Lab results and nurse claims are marked as simulated, and an empty worklist does not cause extra patients to be created.
