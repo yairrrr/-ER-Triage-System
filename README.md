@@ -721,7 +721,23 @@ docs/
 
 ### Verification Evidence
 
-- The team reported **131 tests passed** in PowerShell and a successful offline demonstration. No exact pytest console summary or duration was supplied. Tests cover validation, error handling and retry, selection rules, observers, reports, Async/Threads, Stage 1 regression, integration, client selection and output order; test weather requests are mocked or read local files.
+- For T18, the team validated a clean clone at commit `49c2819` with a fresh virtual environment and successful installation. PowerShell results were `131 passed in 2.46s`, an additional run gave `131 passed in 2.14s`, and the final offline run gave `131 passed in 2.15s`. Tests cover validation, error handling and retry, selection rules, observers, reports, Async/Threads, Stage 1 regression, integration, client selection and output order; test weather requests are mocked or read local files.
+- The team confirmed that the internet was physically disconnected for the final offline validation. Both pytest and the default `main.py` run succeeded; the demonstration showed SIMULATED source, level `danger`, exactly `P005` and `P011` flagged, and forecast maximum 42.0°C. These executions and the disconnection confirmation were supplied by the team, not independently executed or observed by Codex.
+- The team's additional T18 LIVE run returned the following results. This supplied verification record is separate from the earlier T15 evidence:
+
+```text
+Command: python main.py --live
+Execution timestamp: 2026-11-02 19:13:47 +02:00
+Source: LIVE – Open-Meteo
+Status: applied
+Observed at: 2026-11-02T19:00
+Apparent temperature: 26.9°C
+Forecast maximum: 26.9°C
+Heat level: normal
+Flagged patients: 0
+```
+
+- T18 technical validation is recorded; final peer review, integration merge, team module explanations and repository-link submission remain pending.
 - The team performed the following real execution, preserved in [T15 LIVE verification](docs/T15_LIVE_VERIFICATION.md). This is the supplied verification record, not a raw console transcript:
 
 ```text
