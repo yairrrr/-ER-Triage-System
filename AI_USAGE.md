@@ -295,3 +295,12 @@ The suggested changes were reviewed, run and checked before they were committed.
   - An apparent temperature below 32°C gives level `normal` and flags nobody.
 - What we verified: ran `python main.py --live` on 2026-11-02 at 18:52:19 +02:00. Open-Meteo returned status `applied`, observation time `2026-11-02T18:45`, apparent temperature 27.3°C, forecast maximum 28.5°C, heat level `normal` and 0 flagged patients. This was the team's real LIVE run, not a mocked test or an execution by the tool.
 - What we decided: T15 needed no application or test changes. We kept the supplied LIVE evidence in `docs/T15_LIVE_VERIFICATION.md` for inclusion in the Stage 2 README during T16, separately from the simulated demonstrations.
+### T16 – Stage 2 README documentation
+
+- Tool: OpenAI Codex (OpenAI), used to help organize and write the Stage 2 documentation against our work plan and existing code.
+- The tool first proposed the README content, the documentation to preserve and the checks to perform, without changing files. We reviewed and approved the plan before the documentation was updated.
+- Expected results we defined ourselves:
+  - One Stage 2 section explains setup, architecture, rules, error handling and verification without repeating the Stage 1 explanations.
+  - The README preserves our exact T15 LIVE results and links to the three real `classify_heat_level` TDD commits, without inventing console output or commit references.
+- What we verified: the documentation was checked against the existing implementation, settings, work plan and saved T15 record. The tool checked the TDD hashes in Git history, local documentation links, the single Stage 2 heading and `git diff --check`. The 131 passing tests and the offline and LIVE runs are our earlier verification results; no tests or LIVE requests were rerun for this documentation task.
+- What we decided: keep the Stage 1 documentation, correct the outdated dependency statement, and put the Stage 2 additions in one section. AI usage stays in this file, and the saved T15 evidence remains unchanged.
