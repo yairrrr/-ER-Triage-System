@@ -2,11 +2,11 @@
 
 ## AI Tool
 
-The AI tool used during this project was ChatGPT by OpenAI.
+The AI tools documented in this project are ChatGPT and OpenAI Codex by OpenAI, and Claude Code by Anthropic. Their roles are described in the entries below.
 
 AI was used to assist with generating the initial synthetic dataset and, during development, for explanations, code review, debugging, and checking the implementation against the assignment requirements.
 
-All generated suggestions were reviewed and tested before being included in the project.
+The task entries below record the review and validation performed; where historical details cannot be established, that limitation is stated explicitly.
 
 ---
 
@@ -159,6 +159,18 @@ The suggested changes were reviewed, run and checked before they were committed.
 
 ## Stage 2
 
+`PART2_WORK_PLAN.md` was prepared with AI assistance; its initial commit `633e4b5` records Claude Opus 5.5 as a co-author. The team owns the requirements, planning decisions, review and final approval; the tool supported preparation of the plan.
+
+### T0 – Repository setup
+
+- Tool: the available Git history does not establish the exact AI involvement in T0.
+- The setup changes are recorded in commits `58a2513` and `fa065d8`. The available evidence does not establish whether a separate AI plan was proposed or approved before these changes.
+- Expected results specified in our work plan:
+  - Stage 2 dependencies and shared test fixtures are available.
+  - Sample arrival times are loaded with today's date, and the model rejects arrival dates that are not today.
+- What we verified: inspected the historical diffs. Commit `58a2513` updated dependencies and added the test package and shared fixtures; `fa065d8` updated arrival-date handling, sample data and related documentation. These commits establish the changes, not successful historical installation, test or demo runs; no such T0 results are claimed here.
+- What we decided: document the verified changes and the limits of the historical evidence rather than assign a tool, approval or test result that we cannot establish.
+
 ### T1 – Configuration and secrets
 
 - Tool: Claude Code (Anthropic).
@@ -248,7 +260,7 @@ The suggested changes were reviewed, run and checked before they were committed.
   - The worklist is ordered by urgency and then by arrival time, and a patient who started treatment leaves it without any change to the worklist itself.
 - What we verified: ran `python -m pytest -v` (97 tests passed); checked that the log contains the patient ID and not the name; checked that the publisher works with any object that has `notify()`, without type checks.
 - What we corrected: the module file was first created in the `tests` folder by mistake and was moved to `er_triage/` with `git mv`.
-- What we decided: the worklist reads the flag from the patient, so starting treatment removes the patient from the list automatically. `claim_next()` is not thread-safe yet; the lock is added in T12.
+- What we decided: the worklist reads the flag from the patient, so starting treatment removes the patient from the list automatically. At this stage, `claim_next()` is not thread-safe yet; the lock is added in T12.
 ### T12 – Threads and Lock on the nurse worklist
 
 - Tool: Claude Code (Anthropic).
@@ -283,7 +295,7 @@ The suggested changes were reviewed, run and checked before they were committed.
 - Expected results we defined ourselves:
   - The offline demo flags exactly `P005` and `P011`, records the reason `heat:danger`, and reports a forecast maximum of 42.0°C.
   - When the weather client fails, nobody is flagged and the report is `unavailable`, without falling back to simulated weather. Urgency levels and the clinical queue order stay unchanged.
-- What we verified: ran the full test suite in PowerShell (131 tests passed) and completed the offline demonstration successfully. The tests cover the report, audit log, nurse worklist, output order and client selection; the live client is mocked, so no real LIVE execution was verified.
+- What we verified: ran the full test suite in PowerShell (131 tests passed) and completed the offline demonstration successfully. The tests cover the report, audit log, nurse worklist, output order and client selection; the live client is mocked, so no real LIVE execution was verified at this stage.
 - What we corrected: after reviewing the code review findings, we requested tests for the entry points and the absence of fallback, a worklist sorting test with unsorted input and different urgency levels, and a clear message when the Threads demo has no patients to claim.
 - What we decided: all dependencies are connected in `main.py`, and Stage 2 loads its own patients so the Stage 1 demonstration cannot change its results. Offline is the default; only `--live` selects Open-Meteo. Lab results and nurse claims are marked as simulated, and an empty worklist does not cause extra patients to be created.
 ### T15 – Live verification
@@ -304,3 +316,13 @@ The suggested changes were reviewed, run and checked before they were committed.
   - The README preserves our exact T15 LIVE results and links to the three real `classify_heat_level` TDD commits, without inventing console output or commit references.
 - What we verified: the documentation was checked against the existing implementation, settings, work plan and saved T15 record. The tool checked the TDD hashes in Git history, local documentation links, the single Stage 2 heading and `git diff --check`. The 131 passing tests and the offline and LIVE runs are our earlier verification results; no tests or LIVE requests were rerun for this documentation task.
 - What we decided: keep the Stage 1 documentation, correct the outdated dependency statement, and put the Stage 2 additions in one section. AI usage stays in this file, and the saved T15 evidence remains unchanged.
+### T17 – Final AI documentation review
+
+- Tool: OpenAI Codex (OpenAI), used to help review the AI usage record against the work plan and Git history and make the documentation corrections we approved.
+- The tool first reported the coverage gaps, attribution issues and proposed corrections, without changing files. We reviewed and approved the plan, requiring that missing historical details be stated rather than invented.
+- Expected results we defined ourselves:
+  - The record covers T0–T17, acknowledges AI assistance with the work plan, and preserves the team's ownership of requirements, decisions, review and final approval.
+  - Tool assistance, team verification and historical uncertainties are distinguished without adding unsupported approvals, test results or LIVE executions.
+- What we verified: reviewed the full AI usage record and work plan against Git history, checked task headings for T0–T17 coverage and duplicates, and ran `git diff --check`. These are documentation checks; no tests or LIVE requests were run, and earlier reported results were not independently reverified.
+- What we corrected: expanded the opening tool summary, replaced the blanket validation claim with task-specific attribution, acknowledged the AI-assisted work plan, added an evidence-based T0 entry, and clarified that the T8 and T14 statements describe their respective stages.
+- What we decided: preserve the existing historical task reports and their tool attribution, explicitly record T0's evidence limits, and leave T18 pending until the final submission checks are performed.
